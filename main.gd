@@ -169,7 +169,7 @@ func _setup_ground() -> void:
 func _setup_bird() -> void:
 	bird = CharacterBody3D.new()
 	bird.set_script(preload("res://bird.gd"))
-	bird.position = Vector3(0, 7, 0)
+	bird.position = Vector3(2.5, 7, 0)
 	add_child(bird)
 	bird.died.connect(_on_bird_died)
 
