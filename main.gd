@@ -28,6 +28,12 @@ var score_panel: PanelContainer = null
 var message_panel: PanelContainer = null
 var game_over_panel: PanelContainer = null
 
+var btn_mute: Button = null
+var btn_pause: Button = null
+var is_muted: bool = false
+var is_mobile_portrait: bool = false
+var rotate_panel: PanelContainer = null
+
 var _restart_cooldown: bool = false
 
 # Parallax background tracking: [{node, speed, wrap_width}]
@@ -38,6 +44,9 @@ const BG_WRAP_WIDTH: float = 240.0
 
 
 func _ready() -> void:
+	# Lắng nghe sự thay đổi kích thước màn hình
+	get_tree().root.size_changed.connect(_on_size_changed)
+
 	_setup_sound()
 	_setup_environment()
 	_setup_camera()
@@ -47,7 +56,34 @@ func _ready() -> void:
 	_setup_pipes()
 	_setup_background()
 	_setup_ui()
+	
+	_check_mobile_orientation()
 	_show_ready_screen()
+
+
+func _on_size_changed() -> void:
+	_check_mobile_orientation()
+
+
+func _check_mobile_orientation() -> void:
+	var os_name: String = OS.get_name()
+	if os_name == "Android" or os_name == "iOS":
+		var screen_size = get_viewport().get_visible_rect().size
+		if screen_size.y > screen_size.x: # Màn hình dọc (Portrait)
+			is_mobile_portrait = true
+			if rotate_panel:
+				rotate_panel.visible = true
+			if state != GameState.READY: # Dừng game nếu đang chơi
+				get_tree().paused = true
+		else: # Màn hình ngang (Landscape)
+			is_mobile_portrait = false
+			if rotate_panel:
+				rotate_panel.visible = false
+			# Nếu đang sẵn sàng và bị chặn, không tự động unpause game nếu đang chơi (để người dùng nhấn nút Pause lại)
+	else:
+		is_mobile_portrait = false
+		if rotate_panel:
+			rotate_panel.visible = false
 
 
 # ==============================================================
@@ -375,27 +411,33 @@ func _setup_ui() -> void:
 	canvas.name = "UI"
 	add_child(canvas)
 
-	# Shared StyleBox for transparent containers
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.45) # Semi-transparent black
-	style.set_corner_radius_all(15)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
+	# Pill StyleBox for text
+	var pill_style: StyleBoxFlat = StyleBoxFlat.new()
+	pill_style.bg_color = Color(0, 0, 0, 0.45) # Semi-transparent black
+	pill_style.set_corner_radius_all(100)
+	pill_style.content_margin_left = 40
+	pill_style.content_margin_right = 40
+	pill_style.content_margin_top = 15
+	pill_style.content_margin_bottom = 15
+	
+	# Circle StyleBox for score
+	var circle_style: StyleBoxFlat = StyleBoxFlat.new()
+	circle_style.bg_color = Color(0, 0, 0, 0.45)
+	circle_style.set_corner_radius_all(100)
 
 	# --- Score Panel ---
 	score_panel = PanelContainer.new()
-	score_panel.add_theme_stylebox_override("panel", style)
+	score_panel.add_theme_stylebox_override("panel", circle_style)
 	score_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	score_panel.offset_top = 20
-	score_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	score_panel.custom_minimum_size = Vector2(100, 100)
 	score_panel.visible = false
 	canvas.add_child(score_panel)
 
 	score_label = Label.new()
 	score_label.text = "0"
 	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	score_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	score_label.add_theme_font_size_override("font_size", 64)
 	score_label.add_theme_color_override("font_color", Color.WHITE)
@@ -403,7 +445,7 @@ func _setup_ui() -> void:
 
 	# --- Message Panel ---
 	message_panel = PanelContainer.new()
-	message_panel.add_theme_stylebox_override("panel", style)
+	message_panel.add_theme_stylebox_override("panel", pill_style)
 	message_panel.set_anchors_preset(Control.PRESET_CENTER)
 	message_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	message_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -419,12 +461,35 @@ func _setup_ui() -> void:
 
 	# --- Game Over Panel ---
 	game_over_panel = PanelContainer.new()
-	game_over_panel.add_theme_stylebox_override("panel", style)
+	game_over_panel.add_theme_stylebox_override("panel", pill_style)
 	game_over_panel.set_anchors_preset(Control.PRESET_CENTER)
 	game_over_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	game_over_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	game_over_panel.visible = false
 	canvas.add_child(game_over_panel)
+
+	# --- Rotate Device Mobile Panel ---
+	var urgent_style: StyleBoxFlat = pill_style.duplicate()
+	urgent_style.bg_color = Color(0.8, 0.1, 0.1, 0.9)
+	
+	rotate_panel = PanelContainer.new()
+	rotate_panel.add_theme_stylebox_override("panel", urgent_style)
+	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
+	rotate_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	rotate_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	rotate_panel.visible = false
+	rotate_panel.process_mode = Node.PROCESS_MODE_ALWAYS # Hiện kể cả khi pause
+	rotate_panel.z_index = 100 # Đảm bảo nằm trên cùng
+	canvas.add_child(rotate_panel)
+
+	var rotate_label = Label.new()
+	rotate_label.text = "Vui lòng xoay ngang\nđiện thoại để chơi!"
+	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	rotate_label.add_theme_font_size_override("font_size", 42)
+	rotate_label.add_theme_color_override("font_color", Color.WHITE)
+	rotate_panel.add_child(rotate_label)
 
 	game_over_container = VBoxContainer.new()
 	game_over_container.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -470,12 +535,46 @@ func _setup_ui() -> void:
 	restart_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.85))
 	game_over_container.add_child(restart_lbl)
 
+	# --- Mute and Pause Buttons ---
+	var btn_style: StyleBoxFlat = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0, 0, 0, 0.45)
+	btn_style.set_corner_radius_all(100)
+
+	btn_mute = Button.new()
+	btn_mute.text = "🔇" if is_muted else "🔊"
+	btn_mute.add_theme_font_size_override("font_size", 32)
+	btn_mute.add_theme_stylebox_override("normal", btn_style)
+	btn_mute.add_theme_stylebox_override("hover", btn_style)
+	btn_mute.add_theme_stylebox_override("pressed", btn_style)
+	btn_mute.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	btn_mute.custom_minimum_size = Vector2(80, 80)
+	btn_mute.position = Vector2(20, 20)
+	btn_mute.pressed.connect(_on_mute_pressed)
+	btn_mute.process_mode = Node.PROCESS_MODE_ALWAYS
+	canvas.add_child(btn_mute)
+
+	btn_pause = Button.new()
+	btn_pause.text = "⏸"
+	btn_pause.add_theme_font_size_override("font_size", 32)
+	btn_pause.add_theme_stylebox_override("normal", btn_style)
+	btn_pause.add_theme_stylebox_override("hover", btn_style)
+	btn_pause.add_theme_stylebox_override("pressed", btn_style)
+	btn_pause.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	btn_pause.custom_minimum_size = Vector2(80, 80)
+	btn_pause.position = Vector2(120, 20)
+	btn_pause.pressed.connect(_on_pause_pressed)
+	btn_pause.process_mode = Node.PROCESS_MODE_ALWAYS
+	canvas.add_child(btn_pause)
+
 
 # ==============================================================
 #  INPUT
 # ==============================================================
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_mobile_portrait:
+		return
+		
 	if not _is_action_event(event):
 		return
 
@@ -500,6 +599,20 @@ func _is_action_event(event: InputEvent) -> bool:
 	if event is InputEventScreenTouch:
 		return event.pressed
 	return false
+
+
+func _on_pause_pressed() -> void:
+	if state == GameState.PLAYING or state == GameState.READY:
+		var is_paused: bool = get_tree().paused
+		get_tree().paused = !is_paused
+		btn_pause.text = "▶" if !is_paused else "⏸"
+
+
+func _on_mute_pressed() -> void:
+	is_muted = !is_muted
+	var bus_idx = AudioServer.get_bus_index("Master")
+	AudioServer.set_bus_mute(bus_idx, is_muted)
+	btn_mute.text = "🔇" if is_muted else "🔊"
 
 
 # ==============================================================
@@ -585,6 +698,10 @@ func _on_bird_died() -> void:
 
 
 func _restart_game() -> void:
+	if get_tree().paused:
+		get_tree().paused = false
+		btn_pause.text = "⏸"
+		
 	state = GameState.READY
 
 	for pipe: Node3D in pipe_container.get_children():
