@@ -337,7 +337,7 @@ func _create_flag() -> void:
 		flag_mesh.size = Vector2(3.0, 2.0)
 		
 		var flag_mat: StandardMaterial3D = StandardMaterial3D.new()
-		var tex: Texture2D = load("res://Quốc kỳ Việt Nam.png")
+		var tex: Texture2D = load("res://assets/Quốc kỳ Việt Nam.png")
 		flag_mat.albedo_texture = tex
 		flag_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		flag_mesh.material = flag_mat
