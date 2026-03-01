@@ -2,7 +2,7 @@ extends Node3D
 
 signal score_triggered
 
-const SPEED: float = 4.5
+var current_speed: float = 4.5
 const PIPE_WIDTH: float = 1.5
 const PIPE_DEPTH: float = 1.5
 
@@ -89,8 +89,14 @@ func _create_cap(y_pos: float) -> void:
 
 
 func _process(delta: float) -> void:
-	if is_moving:
-		position.x -= SPEED * delta
+	if is_moving and current_speed > 0:
+		var actual_speed = current_speed
+		# If we wanted to access main.gd directly, we could use:
+		# var main = get_tree().root.get_child(0)
+		# if main and "current_speed" in main: actual_speed = main.current_speed
+		
+		# However, main.gd will update all pipes' current_speed instead.
+		position.x -= actual_speed * delta
 		if position.x < -80.0:
 			queue_free()
 

@@ -2,11 +2,14 @@ extends Node3D
 
 enum GameState { READY, PLAYING, GAME_OVER }
 
-const PIPE_SPAWN_INTERVAL: float = 1.7
 const GAP_SIZE: float = 3.8
 const GAP_MIN_Y: float = 3.5
 const GAP_MAX_Y: float = 11.5
-const PIPE_SPAWN_X: float = 28.0
+const PIPE_SPAWN_X: float = 45.0
+const PIPE_SPACING: float = 6.5
+
+var current_speed: float = 5.5
+var base_gravity: float = 24.0
 
 var state: int = GameState.READY
 var score: int = 0
@@ -30,8 +33,8 @@ var _restart_cooldown: bool = false
 # Parallax background tracking: [{node, speed, wrap_width}]
 var _bg_elements: Array = []
 const BG_BASE_SPEED: float = 4.5
-const BG_LEFT_LIMIT: float = -60.0
-const BG_WRAP_WIDTH: float = 120.0
+const BG_LEFT_LIMIT: float = -120.0
+const BG_WRAP_WIDTH: float = 240.0
 
 
 func _ready() -> void:
@@ -180,7 +183,7 @@ func _setup_pipes() -> void:
 	add_child(pipe_container)
 
 	spawn_timer = Timer.new()
-	spawn_timer.wait_time = PIPE_SPAWN_INTERVAL
+	spawn_timer.wait_time = PIPE_SPACING / current_speed
 	spawn_timer.one_shot = false
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	add_child(spawn_timer)
@@ -200,7 +203,7 @@ func _create_sea() -> void:
 func _register_bg(node: Node3D, z_depth: float) -> void:
 	# Deeper Z = slower parallax. Speed factor: 0.15 (far) to 0.6 (near)
 	var factor: float = clampf(1.0 / (1.0 + absf(z_depth) * 0.25), 0.12, 0.65)
-	_bg_elements.append({"node": node, "speed": BG_BASE_SPEED * factor})
+	_bg_elements.append({"node": node, "factor": factor})
 
 
 func _create_mountains() -> void:
@@ -209,8 +212,9 @@ func _create_mountains() -> void:
 	mount_mat.roughness = 1.0
 
 	var positions: Array = [
-		Vector3(-45, 0, -35), Vector3(-15, 0, -38), Vector3(15, 0, -36),
-		Vector3(45, 0, -37), Vector3(75, 0, -36), Vector3(-75, 0, -35)
+		Vector3(-105, 0, -35), Vector3(-75, 0, -35), Vector3(-45, 0, -35),
+		Vector3(-15, 0, -38), Vector3(15, 0, -36), Vector3(45, 0, -37),
+		Vector3(75, 0, -36), Vector3(105, 0, -35)
 	]
 
 	for pos: Vector3 in positions:
@@ -237,8 +241,9 @@ func _create_urban_area() -> void:
 	win_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
 	var clusters: Array = [
-		Vector3(-45, 0, -25), Vector3(-15, 0, -28), Vector3(15, 0, -26),
-		Vector3(45, 0, -25), Vector3(75, 0, -28), Vector3(-75, 0, -26)
+		Vector3(-105, 0, -25), Vector3(-75, 0, -26), Vector3(-45, 0, -25),
+		Vector3(-15, 0, -28), Vector3(15, 0, -26), Vector3(45, 0, -25),
+		Vector3(75, 0, -28), Vector3(105, 0, -26)
 	]
 
 	for cluster_pos: Vector3 in clusters:
@@ -281,7 +286,7 @@ func _create_bg_terrain() -> void:
 	
 	var g_mesh: MeshInstance3D = MeshInstance3D.new()
 	var g_box: BoxMesh = BoxMesh.new()
-	g_box.size = Vector3(400, 0.1, 40) # Large ground area
+	g_box.size = Vector3(600, 0.1, 40) # Larger ground area to cover expanded parallax
 	var g_mat: StandardMaterial3D = StandardMaterial3D.new()
 	g_mat.albedo_color = Color(0.65, 0.85, 0.15) # Banana Green (Vibrant yellowish green)
 	g_box.material = g_mat
@@ -298,7 +303,7 @@ func _create_bg_terrain() -> void:
 		
 		var r_mesh: MeshInstance3D = MeshInstance3D.new()
 		var r_box: BoxMesh = BoxMesh.new()
-		r_box.size = Vector3(400, 0.05, randf_range(1.5, 3.0))
+		r_box.size = Vector3(600, 0.05, randf_range(1.5, 3.0))
 		var r_mat: StandardMaterial3D = StandardMaterial3D.new()
 		r_mat.albedo_color = Color(0.12, 0.12, 0.15) # Dark asphalt
 		r_box.material = r_mat
@@ -306,7 +311,7 @@ func _create_bg_terrain() -> void:
 		road_group.add_child(r_mesh)
 
 func _create_flag() -> void:
-	var intervals: Array = [-40, -10, 20, 50, 80, -70]
+	var intervals: Array = [-100, -70, -40, -10, 20, 50, 80, 110]
 	for x_pos: float in intervals:
 		var flag_group: Node3D = Node3D.new()
 		flag_group.position = Vector3(x_pos, 0, -8)
@@ -354,7 +359,7 @@ func _process(delta: float) -> void:
 		var node: Node3D = entry["node"]
 		if not is_instance_valid(node):
 			continue
-		node.position.x -= entry["speed"] * delta
+		node.position.x -= (current_speed * entry["factor"]) * delta
 		
 		# Wrap background elements far off-screen to prevent flickering/popping
 		if node.position.x < BG_LEFT_LIMIT:
@@ -505,10 +510,19 @@ func _show_ready_screen() -> void:
 func _start_game() -> void:
 	state = GameState.PLAYING
 	score = 0
+	current_speed = 4.5
 	score_label.text = "0"
 	score_panel.visible = true
 	message_panel.visible = false
 	bird.start()
+	
+	# Spawn initial "pipe train" to ensure uniform spacing from the start
+	var spawn_x: float = 32.0
+	while spawn_x <= PIPE_SPAWN_X:
+		_spawn_pipe(spawn_x)
+		spawn_x += PIPE_SPACING
+		
+	spawn_timer.wait_time = PIPE_SPACING / current_speed
 	spawn_timer.start()
 	sound.play_bgm()
 
@@ -517,10 +531,11 @@ func _on_spawn_timer_timeout() -> void:
 	_spawn_pipe()
 
 
-func _spawn_pipe() -> void:
+func _spawn_pipe(forced_x: float = -1.0) -> void:
 	var pipe: Node3D = Node3D.new()
 	pipe.set_script(preload("res://pipe.gd"))
-	pipe.position.x = PIPE_SPAWN_X
+	pipe.position.x = forced_x if forced_x > 0 else PIPE_SPAWN_X
+	pipe.set("current_speed", current_speed)
 	pipe_container.add_child(pipe)
 
 	var gap_center: float = randf_range(GAP_MIN_Y, GAP_MAX_Y)
@@ -544,7 +559,7 @@ func _on_bird_died() -> void:
 	sound.play_hit()
 
 	for pipe: Node3D in pipe_container.get_children():
-		pipe.set("is_moving", false)
+		pipe.set("current_speed", 0)
 
 	if score > best_score:
 		best_score = score

@@ -8,4 +8,8 @@
 
 config_version=5
 
-[animation]
+[application]
+
+config/name="Flappy Bird"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7")
