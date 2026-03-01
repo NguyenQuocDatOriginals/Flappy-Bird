@@ -6,7 +6,7 @@ const PIPE_SPAWN_INTERVAL: float = 1.7
 const GAP_SIZE: float = 3.8
 const GAP_MIN_Y: float = 3.5
 const GAP_MAX_Y: float = 11.5
-const PIPE_SPAWN_X: float = 25.0
+const PIPE_SPAWN_X: float = 22.0
 
 var state: int = GameState.READY
 var score: int = 0
@@ -83,8 +83,8 @@ func _setup_environment() -> void:
 func _setup_camera() -> void:
 	# Landscape 16:9 – camera further back, centered on wider play area
 	var cam: Camera3D = Camera3D.new()
-	cam.position = Vector3(0, 7, 30)
-	cam.fov = 50
+	cam.position = Vector3(0, 7, 35)
+	cam.fov = 60
 	cam.current = true
 	add_child(cam)
 
