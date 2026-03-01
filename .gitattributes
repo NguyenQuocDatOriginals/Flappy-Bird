@@ -1,41 +1,19 @@
-# Auto detect text files and normalize line endings
-* text=auto eol=lf
+# Handle line endings automatically for files detected as text
+# and perform CRLF to LF conversion on checkin.
+* text=auto
 
-# Godot files
-*.gd text eol=lf
-*.tscn text eol=lf
-*.tres text eol=lf
-*.godot text eol=lf
-*.cfg text eol=lf
-*.import text eol=lf
-*.gdignore text eol=lf
+# Explicitly declare text files you want to always be LF or CRLF
+*.gd text
+*.tscn text
+*.gdshader text
+*.cfg text
+*.yml text
+*.json text
+*.md text
 
-# Common text files
-*.md text eol=lf
-*.txt text eol=lf
-*.json text eol=lf
-*.xml text eol=lf
-*.csv text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-
-# Binary files
+# Denote all files that are truly binary and should not be modified.
 *.png binary
 *.jpg binary
 *.jpeg binary
-*.gif binary
-*.bmp binary
-*.svg binary
-*.ico binary
-*.wav binary
-*.ogg binary
-*.mp3 binary
-*.ttf binary
-*.otf binary
-*.woff binary
-*.woff2 binary
-*.glb binary
-*.gltf binary
-*.obj binary
-*.fbx binary
-*.blend binary
+*.tpz binary
+*.import binary

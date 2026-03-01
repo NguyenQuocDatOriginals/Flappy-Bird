@@ -40,6 +40,7 @@ jobs:
         run: |
           mkdir -v -p build/web
           ./godot --headless --verbose --export-release "Web" build/web/index.html
+          cp assets/2026.jpeg build/web/favicon.jpeg
 
       - name: Install Vercel CLI
         run: npm install --global vercel
