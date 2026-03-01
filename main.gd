@@ -6,7 +6,7 @@ const PIPE_SPAWN_INTERVAL: float = 1.7
 const GAP_SIZE: float = 3.8
 const GAP_MIN_Y: float = 3.5
 const GAP_MAX_Y: float = 11.5
-const PIPE_SPAWN_X: float = 25.0
+const PIPE_SPAWN_X: float = 28.0
 
 var state: int = GameState.READY
 var score: int = 0
@@ -16,7 +16,6 @@ var bird: CharacterBody3D = null
 var pipe_container: Node3D = null
 var spawn_timer: Timer = null
 var sound: Node = null
-var cam: Camera3D = null
 
 var score_label: Label = null
 var message_label: Label = null
@@ -45,9 +44,6 @@ func _ready() -> void:
 	_setup_pipes()
 	_setup_background()
 	_setup_ui()
-	
-	get_viewport().size_changed.connect(_update_responsive_layout)
-	_update_responsive_layout()
 	_show_ready_screen()
 
 
@@ -85,34 +81,12 @@ func _setup_environment() -> void:
 
 
 func _setup_camera() -> void:
-	cam = Camera3D.new()
+	# Landscape 16:9 – camera further back, centered on wider play area
+	var cam: Camera3D = Camera3D.new()
+	cam.position = Vector3(5, 7, 20)
+	cam.fov = 45
 	cam.current = true
 	add_child(cam)
-
-func _update_responsive_layout() -> void:
-	var window = get_window()
-	var viewport_size = window.get_visible_rect().size
-	var is_portrait = viewport_size.y > viewport_size.x
-	
-	if bird:
-		bird.position.x = 0 # Bird is always centered at x=0
-	
-	if is_portrait:
-		# Mobile: Forced 9:16 Portrait
-		window.content_scale_size = Vector2i(720, 1280)
-		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
-		cam.position = Vector3(0, 7, 45) # Further back
-		cam.fov = 65
-		cam.keep_aspect = Camera3D.KEEP_WIDTH # CRITICAL: Stop cutting off the sides!
-	else:
-		# PC: Standard Landscape
-		window.content_scale_size = Vector2i(1280, 720)
-		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
-		cam.position = Vector3(0, 7, 25) # Centered at x=0 for safety
-		cam.fov = 50
-		cam.keep_aspect = Camera3D.KEEP_HEIGHT # Landscape is fine with height
-	
-	cam.look_at(Vector3(0, 7, 0))
 
 
 func _setup_lighting() -> void:
