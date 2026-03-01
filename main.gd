@@ -16,6 +16,7 @@ var bird: CharacterBody3D = null
 var pipe_container: Node3D = null
 var spawn_timer: Timer = null
 var sound: Node = null
+var cam: Camera3D = null
 
 var score_label: Label = null
 var message_label: Label = null
@@ -44,6 +45,9 @@ func _ready() -> void:
 	_setup_pipes()
 	_setup_background()
 	_setup_ui()
+	
+	get_viewport().size_changed.connect(_update_responsive_layout)
+	_update_responsive_layout()
 	_show_ready_screen()
 
 
@@ -81,12 +85,24 @@ func _setup_environment() -> void:
 
 
 func _setup_camera() -> void:
-	# Landscape 16:9 – camera further back, centered on wider play area
-	var cam: Camera3D = Camera3D.new()
-	cam.position = Vector3(0, 7, 35)
-	cam.fov = 60
+	cam = Camera3D.new()
 	cam.current = true
 	add_child(cam)
+
+func _update_responsive_layout() -> void:
+	var viewport_size = get_viewport().get_visible_rect().size
+	var is_portrait = viewport_size.y > viewport_size.x
+	
+	if is_portrait:
+		# Mobile Portrait
+		cam.position = Vector3(0, 7, 35)
+		cam.fov = 60
+		if bird: bird.position.x = 0
+	else:
+		# PC Landscape
+		cam.position = Vector3(5, 7, 20)
+		cam.fov = 45
+		if bird: bird.position.x = 0 # PC now also uses 0 as base for consistency
 
 
 func _setup_lighting() -> void:
