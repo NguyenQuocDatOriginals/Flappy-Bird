@@ -23,9 +23,9 @@ jobs:
 
       - name: Download Godot 4.7-dev1
         run: |
-          wget https://github.com/godotengine/godot-builds/releases/download/4.7-dev1/Godot_v4.7-dev1_linux_x86_64.zip
-          unzip Godot_v4.7-dev1_linux_x86_64.zip
-          mv Godot_v4.7-dev1_linux_x86_64 godot
+          wget https://github.com/godotengine/godot-builds/releases/download/4.7-dev1/Godot_v4.7-dev1_linux.x86_64.zip
+          unzip Godot_v4.7-dev1_linux.x86_64.zip
+          mv Godot_v4.7-dev1_linux.x86_64 godot
           chmod +x godot
 
       - name: Download Export Templates
