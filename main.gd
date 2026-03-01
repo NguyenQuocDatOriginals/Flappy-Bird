@@ -396,6 +396,7 @@ func _setup_ui() -> void:
 	score_label = Label.new()
 	score_label.text = "0"
 	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	score_label.add_theme_font_size_override("font_size", 64)
 	score_label.add_theme_color_override("font_color", Color.WHITE)
 	score_panel.add_child(score_label)
@@ -411,6 +412,7 @@ func _setup_ui() -> void:
 	message_label = Label.new()
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	message_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	message_label.add_theme_font_size_override("font_size", 32)
 	message_label.add_theme_color_override("font_color", Color.WHITE)
 	message_panel.add_child(message_label)
@@ -431,6 +433,7 @@ func _setup_ui() -> void:
 	var go_label: Label = Label.new()
 	go_label.text = "KẾT THÚC"
 	go_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	go_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	go_label.add_theme_font_size_override("font_size", 52)
 	go_label.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
 	game_over_container.add_child(go_label)
@@ -442,6 +445,7 @@ func _setup_ui() -> void:
 	var score_disp: Label = Label.new()
 	score_disp.name = "ScoreDisplay"
 	score_disp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
 	score_disp.add_theme_font_size_override("font_size", 36)
 	score_disp.add_theme_color_override("font_color", Color.WHITE)
 	game_over_container.add_child(score_disp)
@@ -449,6 +453,7 @@ func _setup_ui() -> void:
 	var best_disp: Label = Label.new()
 	best_disp.name = "BestDisplay"
 	best_disp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	best_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
 	best_disp.add_theme_font_size_override("font_size", 30)
 	best_disp.add_theme_color_override("font_color", Color(1, 0.84, 0))
 	game_over_container.add_child(best_disp)
@@ -458,8 +463,9 @@ func _setup_ui() -> void:
 	game_over_container.add_child(spacer2)
 
 	var restart_lbl: Label = Label.new()
-	restart_lbl.text = "Nhấn chuột hoặc Space\nđể chơi lại"
+	restart_lbl.text = "Nhấn chuột hoặc phím Space để chơi lại"
 	restart_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	restart_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
 	restart_lbl.add_theme_font_size_override("font_size", 28)
 	restart_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.85))
 	game_over_container.add_child(restart_lbl)
