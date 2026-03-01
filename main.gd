@@ -6,7 +6,7 @@ const PIPE_SPAWN_INTERVAL: float = 1.7
 const GAP_SIZE: float = 3.8
 const GAP_MIN_Y: float = 3.5
 const GAP_MAX_Y: float = 11.5
-const PIPE_SPAWN_X: float = 22.0
+const PIPE_SPAWN_X: float = 28.0
 
 var state: int = GameState.READY
 var score: int = 0
@@ -90,19 +90,25 @@ func _setup_camera() -> void:
 	add_child(cam)
 
 func _update_responsive_layout() -> void:
-	var viewport_size = get_viewport().get_visible_rect().size
+	var window = get_window()
+	var viewport_size = window.get_visible_rect().size
 	var is_portrait = viewport_size.y > viewport_size.x
 	
 	if is_portrait:
-		# Mobile Portrait
+		# Mobile: Forced 9:16 Portrait
+		window.content_scale_size = Vector2i(720, 1280)
+		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP_WIDTH
 		cam.position = Vector3(0, 7, 35)
 		cam.fov = 60
-		if bird: bird.position.x = 0
 	else:
-		# PC Landscape
+		# PC: Standard Landscape
+		window.content_scale_size = Vector2i(1280, 720)
+		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 		cam.position = Vector3(5, 7, 20)
 		cam.fov = 45
-		if bird: bird.position.x = 0 # PC now also uses 0 as base for consistency
+	
+	if bird:
+		bird.position.x = 0 # Center bird for both modes in this new setup
 
 
 func _setup_lighting() -> void:
