@@ -165,7 +165,7 @@ func start() -> void:
 
 
 func reset() -> void:
-	position = Vector3(8.5, 7, 0)
+	position = Vector3(20, 7, 0)
 	velocity = Vector3.ZERO
 	rotation = Vector3.ZERO
 	is_alive = true

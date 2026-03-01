@@ -6,7 +6,7 @@ const PIPE_SPAWN_INTERVAL: float = 1.7
 const GAP_SIZE: float = 3.8
 const GAP_MIN_Y: float = 3.5
 const GAP_MAX_Y: float = 11.5
-const PIPE_SPAWN_X: float = 28.0
+const PIPE_SPAWN_X: float = 45.0
 
 var state: int = GameState.READY
 var score: int = 0
@@ -83,7 +83,7 @@ func _setup_environment() -> void:
 func _setup_camera() -> void:
 	# Landscape 16:9 – camera further back, centered on wider play area
 	var cam: Camera3D = Camera3D.new()
-	cam.position = Vector3(5, 7, 20)
+	cam.position = Vector3(18, 7, 20)
 	cam.fov = 45
 	cam.current = true
 	add_child(cam)
@@ -108,7 +108,7 @@ func _setup_ground() -> void:
 	ground.name = "Ground"
 	ground.collision_layer = 4
 	ground.collision_mask = 0
-	ground.position = Vector3(5, -0.5, 0)
+	ground.position = Vector3(18, -0.5, 0)
 
 	var g_mesh: MeshInstance3D = MeshInstance3D.new()
 	var g_box: BoxMesh = BoxMesh.new()
@@ -136,7 +136,7 @@ func _setup_ground() -> void:
 	paddy_mat.roughness = 0.85
 	paddy_box.material = paddy_mat
 	paddy.mesh = paddy_box
-	paddy.position = Vector3(5, 0.06, 0)
+	paddy.position = Vector3(18, 0.06, 0)
 	add_child(paddy)
 
 	# Dirt path strip (đường làng)
@@ -148,7 +148,7 @@ func _setup_ground() -> void:
 	path_mat.roughness = 0.9
 	path_box.material = path_mat
 	path.mesh = path_box
-	path.position = Vector3(5, 0.065, 2.0)
+	path.position = Vector3(18, 0.065, 2.0)
 	add_child(path)
 
 	# Invisible ceiling
@@ -156,7 +156,7 @@ func _setup_ground() -> void:
 	ceiling.name = "Ceiling"
 	ceiling.collision_layer = 4
 	ceiling.collision_mask = 0
-	ceiling.position = Vector3(5, 15.5, 0)
+	ceiling.position = Vector3(18, 15.5, 0)
 
 	var c_col: CollisionShape3D = CollisionShape3D.new()
 	var c_shape: BoxShape3D = BoxShape3D.new()
@@ -169,7 +169,7 @@ func _setup_ground() -> void:
 func _setup_bird() -> void:
 	bird = CharacterBody3D.new()
 	bird.set_script(preload("res://bird.gd"))
-	bird.position = Vector3(8.5, 7, 0)
+	bird.position = Vector3(20, 7, 0)
 	add_child(bird)
 	bird.died.connect(_on_bird_died)
 
