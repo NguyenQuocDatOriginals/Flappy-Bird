@@ -6,7 +6,7 @@ const PIPE_SPAWN_INTERVAL: float = 1.7
 const GAP_SIZE: float = 3.8
 const GAP_MIN_Y: float = 3.5
 const GAP_MAX_Y: float = 11.5
-const PIPE_SPAWN_X: float = 35.0
+const PIPE_SPAWN_X: float = 25.0
 
 var state: int = GameState.READY
 var score: int = 0
@@ -94,25 +94,25 @@ func _update_responsive_layout() -> void:
 	var viewport_size = window.get_visible_rect().size
 	var is_portrait = viewport_size.y > viewport_size.x
 	
+	if bird:
+		bird.position.x = 0 # Bird is always centered at x=0
+	
 	if is_portrait:
-		# Mobile: Forced 9:16 Portrait with bars if necessary
+		# Mobile: Forced 9:16 Portrait
 		window.content_scale_size = Vector2i(720, 1280)
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
-		cam.position = Vector3(0, 7, 40) # Push camera back
-		cam.fov = 75 # Much wider FOV
+		cam.position = Vector3(0, 7, 45) # Further back
+		cam.fov = 65
+		cam.keep_aspect = Camera3D.KEEP_WIDTH # CRITICAL: Stop cutting off the sides!
 	else:
 		# PC: Standard Landscape
 		window.content_scale_size = Vector2i(1280, 720)
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
-		cam.position = Vector3(5, 7, 20)
-		cam.fov = 45
+		cam.position = Vector3(0, 7, 25) # Centered at x=0 for safety
+		cam.fov = 50
+		cam.keep_aspect = Camera3D.KEEP_HEIGHT # Landscape is fine with height
 	
-	if bird:
-		bird.position.x = 0
-		# Guarantee centering by looking directly at the bird
-		cam.look_at(bird.position)
-	else:
-		cam.look_at(Vector3(0, 7, 0))
+	cam.look_at(Vector3(0, 7, 0))
 
 
 func _setup_lighting() -> void:
