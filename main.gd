@@ -8,7 +8,7 @@ const GAP_MAX_Y: float = 11.5
 const PIPE_SPAWN_X: float = 45.0
 const PIPE_SPACING: float = 6.5
 
-var current_speed: float = 5.5
+var current_speed: float = 3.5
 var base_gravity: float = 24.0
 
 var state: int = GameState.READY
@@ -32,7 +32,7 @@ var _restart_cooldown: bool = false
 
 # Parallax background tracking: [{node, speed, wrap_width}]
 var _bg_elements: Array = []
-const BG_BASE_SPEED: float = 4.5
+const BG_BASE_SPEED: float = 5.5
 const BG_LEFT_LIMIT: float = -120.0
 const BG_WRAP_WIDTH: float = 240.0
 
@@ -516,7 +516,7 @@ func _show_ready_screen() -> void:
 func _start_game() -> void:
 	state = GameState.PLAYING
 	score = 0
-	current_speed = 4.5
+	current_speed = 3.0
 	score_label.text = "0"
 	score_panel.visible = true
 	message_panel.visible = false

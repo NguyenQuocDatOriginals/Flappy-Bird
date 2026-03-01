@@ -2,9 +2,9 @@ extends CharacterBody3D
 
 signal died
 
-const GRAVITY: float = 25.0
-const FLAP_STRENGTH: float = 9.5
-const MAX_FALL_SPEED: float = -18.0
+const GRAVITY: float = 18.0
+const FLAP_STRENGTH: float = 7.0
+const MAX_FALL_SPEED: float = -13.0
 const ROTATION_LERP_SPEED: float = 4.0
 
 var is_alive: bool = true
