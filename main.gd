@@ -167,12 +167,12 @@ func _setup_environment() -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_color = Color(0.85, 0.90, 1.0)
-	env.ambient_light_energy = 0.8
+	env.ambient_light_energy = 0.4 # Reduced from 0.8
 	
 	# Anti-overexposure (Tonemapping)
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 1.0
-	env.tonemap_white = 1.0
+	env.tonemap_white = 6.0 # Increased from 1.0 to prevent clipping
 
 	var world_env: WorldEnvironment = WorldEnvironment.new()
 	world_env.environment = env
@@ -194,7 +194,7 @@ func _setup_lighting() -> void:
 	var sun: DirectionalLight3D = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-45, -20, 0)
 	sun.shadow_enabled = true
-	sun.light_energy = 1.15
+	sun.light_energy = 0.9 # Reduced from 1.15
 	sun.light_color = Color(1.0, 0.97, 0.93)
 	sun.directional_shadow_max_distance = 80.0
 	sun.shadow_normal_bias = 2.0
@@ -451,9 +451,9 @@ func _create_flag() -> void:
 		var tex: Texture2D = load("res://assets/Quốc kỳ Việt Nam.png")
 		flag_mat.albedo_texture = tex
 		flag_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		flag_mat.specular = 0.0 # Remove overexposed glare
+		flag_mat.specular = 0.0 # Keep matte to prevent glare
 		flag_mat.roughness = 1.0
-		flag_mat.albedo_color = Color(0.9, 0.9, 0.9) # Subtle headroom
+		# Albedo color hack removed, lighting is now normalized
 		flag_mesh.material = flag_mat
 		
 		flag.mesh = flag_mesh
@@ -508,9 +508,8 @@ func _create_posters() -> void:
 		var board_mat: StandardMaterial3D = StandardMaterial3D.new()
 		board_mat.albedo_texture = poster_tex
 		board_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		board_mat.specular = 0.0 # Remove overexposed glare
-		board_mat.roughness = 1.0 
-		board_mat.albedo_color = Color(0.9, 0.9, 0.9) # Slight headroom
+		# Shading disabled to ensure 1:1 original color fidelity
+		board_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		board_mesh.material = board_mat
 		
 		board.mesh = board_mesh
