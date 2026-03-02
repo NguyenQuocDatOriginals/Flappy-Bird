@@ -170,7 +170,7 @@ func _setup_environment() -> void:
 	env.ambient_light_energy = 0.8
 	
 	# Anti-overexposure (Tonemapping)
-	env.tonemap_mode = Environment.TONE_MAP_ACES
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 1.0
 	env.tonemap_white = 1.0
 
