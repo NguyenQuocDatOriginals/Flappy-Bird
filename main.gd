@@ -807,7 +807,6 @@ func _on_pause_pressed() -> void:
 			sound.set_bgm_paused(true)
 		else:
 			btn_pause.icon = preload("res://assets/pause.svg")
-			pause_panel.visible = false
 			sound.set_bgm_paused(false)
 			if state == GameState.READY:
 				message_panel.visible = true
@@ -834,7 +833,6 @@ func _show_ready_screen() -> void:
 	
 	message_label.text = "Hãy " + action_text + " để bắt đầu nha bạn yêu dấu ơi!"
 	message_panel.visible = !is_mobile_portrait
-	pause_panel.visible = false
 	score_panel.visible = false
 	game_over_panel.visible = false
 	
@@ -849,7 +847,6 @@ func _start_game() -> void:
 	score_label.text = "0"
 	score_panel.visible = true
 	message_panel.visible = false
-	pause_panel.visible = false
 	
 	if btn_pause:
 		btn_pause.visible = true
