@@ -782,7 +782,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			sound.play_flap()
 		GameState.GAME_OVER:
 			if not _restart_cooldown:
-				_restart_game()
+				_restart_game(true) # Start immediately
 
 
 func _is_action_event(event: InputEvent) -> bool:
