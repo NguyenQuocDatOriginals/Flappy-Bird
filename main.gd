@@ -86,8 +86,9 @@ func _check_mobile_orientation() -> void:
 			is_mobile_portrait = true
 			if rotate_panel:
 				rotate_panel.visible = true
+				rotate_panel.mouse_filter = Control.MOUSE_FILTER_STOP # Block touch inputs
 			
-			# Hiden all UI and bird
+			# Hide all UI and bird
 			_set_game_visibility(false)
 			if message_panel: message_panel.visible = false
 			
@@ -100,7 +101,6 @@ func _check_mobile_orientation() -> void:
 			
 			# Restore UI and bird visibility
 			_set_game_visibility(true)
-			# Nếu đang sẵn sàng và bị chặn, không tự động unpause game nếu đang chơi (để người dùng nhấn nút Pause lại)
 	else:
 		is_mobile_portrait = false
 		if rotate_panel:
@@ -739,39 +739,39 @@ func _setup_ui() -> void:
 	game_over_panel.visible = false
 	canvas.add_child(game_over_panel)
 
-	# --- Rotate Device Mobile Panel ---
+	# --- Rotate Device Mobile Panel (Hard Block) ---
 	rotate_panel = PanelContainer.new()
-	_setup_modern_panel(rotate_panel, true, true)
+	_setup_modern_panel(rotate_panel, false, true) # No circle, urgent
 	
-	# Match pause_panel exactly for mobile
-	var os_name: String = OS.get_name()
-	var is_mobile: bool = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
-	if is_mobile:
-		rotate_panel.custom_minimum_size = Vector2(150, 0)
-		var match_style = rotate_panel.get_theme_stylebox("panel").duplicate()
-		match_style.content_margin_left = 30
-		match_style.content_margin_right = 30
-		match_style.content_margin_top = 20
-		match_style.content_margin_bottom = 20
-		rotate_panel.add_theme_stylebox_override("panel", match_style)
+	# Solid background to hide game
+	var rotate_style = rotate_panel.get_theme_stylebox("panel").duplicate()
+	rotate_style.bg_color = Color("#111827") # Dark opaque background (Gray 900)
+	rotate_panel.add_theme_stylebox_override("panel", rotate_style)
 	
-	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
+	rotate_panel.set_anchors_preset(Control.PRESET_FULL_RECT) # Full Screen
 	rotate_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	rotate_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	rotate_panel.visible = false
-	rotate_panel.process_mode = Node.PROCESS_MODE_ALWAYS # Hiện kể cả khi pause
-	rotate_panel.z_index = 100 # Đảm bảo nằm trên cùng
+	rotate_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	rotate_panel.z_index = 1000 # On top of everything
+	rotate_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	canvas.add_child(rotate_panel)
 
+	var rotate_vbox = VBoxContainer.new()
+	rotate_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	rotate_panel.add_child(rotate_vbox)
+
+	# Optional: You could add a rotate icon here later
+	
 	var rotate_label = Label.new()
-	rotate_label.text = "Hãy xoay ngang điện thoại để chơi nha bạn yêu dấu ơi!"
+	rotate_label.text = "HÃY XOAY NGANG ĐIỆN THOẠI\nĐỂ TIẾP TỤC CHƠI BẠN NHÉ!"
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	rotate_label.add_theme_font_size_override("font_size", 40 if _is_mobile else 20) # Shrunk slightly
+	rotate_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rotate_label.add_theme_font_size_override("font_size", 48 if _is_mobile else 24)
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(rotate_label, true)
-	rotate_panel.add_child(rotate_label)
+	rotate_vbox.add_child(rotate_label)
 
 	game_over_container = VBoxContainer.new()
 	game_over_container.alignment = BoxContainer.ALIGNMENT_CENTER
