@@ -83,6 +83,7 @@ func _check_mobile_orientation() -> void:
 			
 			# Hiden all UI and bird
 			_set_game_visibility(false)
+			if message_panel: message_panel.visible = false
 			
 			if state != GameState.READY: # Dừng game nếu đang chơi
 				get_tree().paused = true
@@ -669,15 +670,17 @@ func _setup_ui() -> void:
 	rotate_panel = PanelContainer.new()
 	_setup_modern_panel(rotate_panel, true, true)
 	
-	# Enlarge for mobile
+	# Match pause_panel exactly for mobile
 	var os_name: String = OS.get_name()
 	var is_mobile: bool = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
 	if is_mobile:
-		rotate_panel.custom_minimum_size = Vector2(850, 200)
-		var large_style = rotate_panel.get_theme_stylebox("panel").duplicate()
-		large_style.content_margin_left = 80
-		large_style.content_margin_right = 80
-		rotate_panel.add_theme_stylebox_override("panel", large_style)
+		rotate_panel.custom_minimum_size = Vector2(150, 0)
+		var match_style = rotate_panel.get_theme_stylebox("panel").duplicate()
+		match_style.content_margin_left = 120
+		match_style.content_margin_right = 120
+		match_style.content_margin_top = 60
+		match_style.content_margin_bottom = 60
+		rotate_panel.add_theme_stylebox_override("panel", match_style)
 	
 	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
 	rotate_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -692,7 +695,7 @@ func _setup_ui() -> void:
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	rotate_label.add_theme_font_size_override("font_size", 42)
+	rotate_label.add_theme_font_size_override("font_size", 64) # Matched to pause_label
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(rotate_label, true)
 	rotate_panel.add_child(rotate_label)
@@ -853,7 +856,7 @@ func _show_ready_screen() -> void:
 	var action_text = "chạm vào màn hình" if is_mobile else "nhấn chuột hoặc phím Space"
 	
 	message_label.text = "Hãy " + action_text + " để bắt đầu nha bạn yêu dấu ơi!"
-	message_panel.visible = true
+	message_panel.visible = !is_mobile_portrait
 	pause_panel.visible = false
 	score_panel.visible = false
 	game_over_panel.visible = false
