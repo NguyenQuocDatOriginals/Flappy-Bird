@@ -27,6 +27,8 @@ var game_over_container: VBoxContainer = null
 var score_panel: PanelContainer = null
 var message_panel: PanelContainer = null
 var game_over_panel: PanelContainer = null
+var pause_panel: PanelContainer = null
+var pause_label: Label = null
 
 var btn_mute: Button = null
 var btn_pause: Button = null
@@ -573,6 +575,35 @@ func _setup_ui() -> void:
 	_setup_modern_label(message_label, false)
 	message_panel.add_child(message_label)
 
+	# --- Capsule Pause Panel ---
+	pause_panel = PanelContainer.new()
+	_setup_modern_panel(pause_panel, true)
+	var custom_pause_style = pause_panel.get_theme_stylebox("panel").duplicate()
+	custom_pause_style.content_margin_left = 120
+	custom_pause_style.content_margin_right = 120
+	custom_pause_style.content_margin_top = 60
+	custom_pause_style.content_margin_bottom = 60
+	pause_panel.add_theme_stylebox_override("panel", custom_pause_style)
+	
+	# Matching score_panel position exactly
+	pause_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	pause_panel.offset_top = -30
+	pause_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	pause_panel.grow_vertical = Control.GROW_DIRECTION_END
+	pause_panel.custom_minimum_size = Vector2(150, 0)
+	pause_panel.visible = false
+	canvas.add_child(pause_panel)
+
+	pause_label = Label.new()
+	pause_label.text = "Đã tạm dừng trò chơi rồi nè bạn yêu dấu ơi!"
+	pause_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	pause_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	pause_label.add_theme_font_size_override("font_size", 64)
+	pause_label.add_theme_color_override("font_color", Color.WHITE)
+	_setup_modern_label(pause_label, false)
+	pause_panel.add_child(pause_label)
+
 
 	# --- Game Over Panel ---
 	game_over_panel = PanelContainer.new()
@@ -739,8 +770,11 @@ func _on_pause_pressed() -> void:
 		if !is_paused: # Tức là hiện tại đang chuyển sang Pause
 			btn_pause.icon = preload("res://assets/play.svg")
 			score_panel.visible = false
+			message_panel.visible = false
+			pause_panel.visible = true
 		else:
 			btn_pause.icon = preload("res://assets/pause.svg")
+			pause_panel.visible = false
 			if state == GameState.READY:
 				message_panel.visible = true
 			else:
@@ -762,6 +796,7 @@ func _on_mute_pressed() -> void:
 func _show_ready_screen() -> void:
 	message_label.text = "Hãy nhấn chuột hoặc phím Space để bắt đầu nha bạn yêu dấu ơi!"
 	message_panel.visible = true
+	pause_panel.visible = false
 	score_panel.visible = false
 	game_over_panel.visible = false
 	
@@ -776,6 +811,7 @@ func _start_game() -> void:
 	score_label.text = "0"
 	score_panel.visible = true
 	message_panel.visible = false
+	pause_panel.visible = false
 	
 	if btn_pause:
 		btn_pause.visible = true
