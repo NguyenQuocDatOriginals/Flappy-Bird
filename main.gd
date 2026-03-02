@@ -294,7 +294,11 @@ func _create_sea() -> void:
 func _register_bg(node: Node3D, z_depth: float) -> void:
 	# Deeper Z = slower parallax. Speed factor: 0.15 (far) to 0.6 (near)
 	var factor: float = clampf(1.0 / (1.0 + absf(z_depth) * 0.25), 0.12, 0.65)
-	_bg_elements.append({"node": node, "factor": factor})
+	_bg_elements.append({
+		"node": node, 
+		"factor": factor,
+		"start_x": node.position.x
+	})
 
 
 func _create_mountains() -> void:
@@ -462,6 +466,13 @@ func _process(delta: float) -> void:
 		# Wrap background elements far off-screen to prevent flickering/popping
 		if node.position.x < BG_LEFT_LIMIT:
 			node.position.x += BG_WRAP_WIDTH
+
+
+func _reset_background() -> void:
+	for entry: Dictionary in _bg_elements:
+		var node: Node3D = entry["node"]
+		if is_instance_valid(node):
+			node.position.x = entry["start_x"]
 
 
 # ==============================================================
@@ -951,6 +962,7 @@ func _restart_game(start_immediately: bool = false) -> void:
 		pipe.free()
 
 	bird.reset()
+	_reset_background()
 	
 	if start_immediately:
 		_start_game()
