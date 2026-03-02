@@ -45,8 +45,9 @@ func _create_body() -> void:
 
 func _create_beak() -> void:
 	var beak: MeshInstance3D = MeshInstance3D.new()
-	var beak_mesh: BoxMesh = BoxMesh.new()
-	beak_mesh.size = Vector3(0.22, 0.12, 0.18)
+	var beak_mesh: CapsuleMesh = CapsuleMesh.new()
+	beak_mesh.radius = 0.08
+	beak_mesh.height = 0.22
 
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.albedo_color = Color(1.0, 0.4, 0.0)
@@ -54,7 +55,8 @@ func _create_beak() -> void:
 	beak_mesh.material = mat
 
 	beak.mesh = beak_mesh
-	beak.position = Vector3(0.38, -0.02, 0.0)
+	beak.rotation_degrees.z = -90
+	beak.position = Vector3(0.35, -0.02, 0.0) # Nhích lại gần mặt xíu
 	add_child(beak)
 
 
@@ -97,12 +99,12 @@ func _create_wings() -> void:
 
 	wing_l = MeshInstance3D.new()
 	wing_l.mesh = wing_mesh
-	wing_l.position = Vector3(-0.05, 0.05, 0.35)
+	wing_l.position = Vector3(-0.05, 0.02, 0.28)
 	add_child(wing_l)
 
 	wing_r = MeshInstance3D.new()
 	wing_r.mesh = wing_mesh
-	wing_r.position = Vector3(-0.05, 0.05, -0.35)
+	wing_r.position = Vector3(-0.05, 0.02, -0.28)
 	add_child(wing_r)
 
 
@@ -123,8 +125,16 @@ func _physics_process(delta: float) -> void:
 	if not is_alive:
 		velocity.y -= GRAVITY * delta
 		velocity.y = max(velocity.y, MAX_FALL_SPEED)
-		move_and_slide()
-		rotation.z = lerp(rotation.z, -PI / 2.0, delta * 2.5)
+		
+		var col = move_and_collide(velocity * delta)
+		if col:
+			velocity = Vector3.ZERO
+		
+		var target_rot: float = -PI / 2.0
+		if velocity == Vector3.ZERO:
+			target_rot = 0.0 # Nằm ngang dọc thân mình lúc chạm đất
+		
+		rotation.z = lerp(rotation.z, target_rot, delta * 3.5)
 		return
 
 	if not can_flap:
@@ -157,6 +167,11 @@ func die() -> void:
 	if not is_alive:
 		return
 	is_alive = false
+	
+	# Loại bỏ va chạm với ống (Layer 2), chỉ giữ lại mặt đất (Layer 4)
+	# Để chim rơi xuyên qua ống và nằm trên mặt đất
+	collision_mask = 4
+	
 	died.emit()
 
 
@@ -165,7 +180,7 @@ func start() -> void:
 
 
 func reset() -> void:
-	position = Vector3(0, 7, 0)
+	position = Vector3(5, 7, 0)
 	velocity = Vector3.ZERO
 	rotation = Vector3.ZERO
 	is_alive = true

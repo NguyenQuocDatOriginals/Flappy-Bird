@@ -44,6 +44,9 @@ const BG_WRAP_WIDTH: float = 240.0
 
 
 func _ready() -> void:
+	# Cho phép Main script luôn chạy để nhận Input Unpause
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	
 	# Lắng nghe sự thay đổi kích thước màn hình
 	get_tree().root.size_changed.connect(_on_size_changed)
 
@@ -67,7 +70,9 @@ func _on_size_changed() -> void:
 
 func _check_mobile_orientation() -> void:
 	var os_name: String = OS.get_name()
-	if os_name == "Android" or os_name == "iOS":
+	var is_mobile: bool = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
+	
+	if is_mobile:
 		var screen_size = get_viewport().get_visible_rect().size
 		if screen_size.y > screen_size.x: # Màn hình dọc (Portrait)
 			is_mobile_portrait = true
@@ -94,6 +99,7 @@ func _setup_sound() -> void:
 	sound = Node.new()
 	sound.set_script(preload("res://sound_manager.gd"))
 	sound.name = "SoundManager"
+	sound.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(sound)
 
 
@@ -116,6 +122,7 @@ func _setup_environment() -> void:
 
 	var world_env: WorldEnvironment = WorldEnvironment.new()
 	world_env.environment = env
+	world_env.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(world_env)
 
 
@@ -208,7 +215,8 @@ func _setup_ground() -> void:
 func _setup_bird() -> void:
 	bird = CharacterBody3D.new()
 	bird.set_script(preload("res://bird.gd"))
-	bird.position = Vector3(0, 7, 0)
+	bird.position = Vector3(5, 7, 0)
+	bird.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(bird)
 	bird.died.connect(_on_bird_died)
 
@@ -216,11 +224,13 @@ func _setup_bird() -> void:
 func _setup_pipes() -> void:
 	pipe_container = Node3D.new()
 	pipe_container.name = "Pipes"
+	pipe_container.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(pipe_container)
 
 	spawn_timer = Timer.new()
 	spawn_timer.wait_time = PIPE_SPACING / current_speed
 	spawn_timer.one_shot = false
+	spawn_timer.process_mode = Node.PROCESS_MODE_PAUSABLE
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	add_child(spawn_timer)
 
@@ -256,6 +266,7 @@ func _create_mountains() -> void:
 	for pos: Vector3 in positions:
 		var group: Node3D = Node3D.new()
 		group.position = pos
+		group.process_mode = Node.PROCESS_MODE_PAUSABLE
 		add_child(group)
 		_register_bg(group, pos.z)
 
@@ -285,6 +296,7 @@ func _create_urban_area() -> void:
 	for cluster_pos: Vector3 in clusters:
 		var group: Node3D = Node3D.new()
 		group.position = cluster_pos
+		group.process_mode = Node.PROCESS_MODE_PAUSABLE
 		add_child(group)
 		_register_bg(group, cluster_pos.z)
 
@@ -317,6 +329,7 @@ func _create_bg_terrain() -> void:
 	# Banana green background ground – spans Z from -10 to -45
 	var grass_group: Node3D = Node3D.new()
 	grass_group.position = Vector3(0, -0.6, -25) # Centered
+	grass_group.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(grass_group)
 	_register_bg(grass_group, -25)
 	
@@ -334,6 +347,7 @@ func _create_bg_terrain() -> void:
 	for z_pos in road_depths:
 		var road_group: Node3D = Node3D.new()
 		road_group.position = Vector3(0, -0.55, z_pos)
+		road_group.process_mode = Node.PROCESS_MODE_PAUSABLE
 		add_child(road_group)
 		_register_bg(road_group, z_pos)
 		
@@ -351,6 +365,7 @@ func _create_flag() -> void:
 	for x_pos: float in intervals:
 		var flag_group: Node3D = Node3D.new()
 		flag_group.position = Vector3(x_pos, 0, -8)
+		flag_group.process_mode = Node.PROCESS_MODE_PAUSABLE
 		add_child(flag_group)
 		_register_bg(flag_group, -8)
 
@@ -388,7 +403,7 @@ func _create_flag() -> void:
 # ==============================================================
 
 func _process(delta: float) -> void:
-	if state != GameState.PLAYING:
+	if state != GameState.PLAYING or get_tree().paused:
 		return
 	
 	for entry: Dictionary in _bg_elements:
@@ -403,6 +418,100 @@ func _process(delta: float) -> void:
 
 
 # ==============================================================
+#  MODERN UI HELPERS
+# ==============================================================
+
+func _setup_modern_button(btn: Button) -> void:
+	btn.resized.connect(func(): btn.pivot_offset = btn.size / 2.0)
+	
+	btn.mouse_entered.connect(func():
+		var tw = get_tree().create_tween()
+		tw.tween_property(btn, "scale", Vector2(1.1, 1.1), 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	)
+	btn.mouse_exited.connect(func():
+		var tw = get_tree().create_tween()
+		tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	)
+	btn.button_down.connect(func():
+		var tw = get_tree().create_tween()
+		tw.tween_property(btn, "scale", Vector2(0.95, 0.95), 0.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	)
+	btn.button_up.connect(func():
+		var tw = get_tree().create_tween()
+		var target_scale = Vector2(1.1, 1.1) if btn.is_hovered() else Vector2(1.0, 1.0)
+		tw.tween_property(btn, "scale", target_scale, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	)
+	
+	var normal_style = StyleBoxFlat.new()
+	normal_style.bg_color = Color("#2563EB") # primary-600
+	normal_style.set_corner_radius_all(100)
+	normal_style.shadow_color = Color(0.145, 0.388, 0.922, 0.4) # shadow-primary-600/40
+	normal_style.shadow_size = 15
+	normal_style.shadow_offset = Vector2(0, 4)
+	
+	var hover_style = normal_style.duplicate()
+	hover_style.bg_color = Color("#3B82F6") # primary-500
+	hover_style.shadow_size = 20
+	hover_style.shadow_offset = Vector2(0, 8)
+	
+	var pressed_style = normal_style.duplicate()
+	pressed_style.bg_color = Color("#1D4ED8") # primary-700
+	pressed_style.shadow_size = 5
+	pressed_style.shadow_offset = Vector2(0, 2)
+	
+	btn.add_theme_stylebox_override("normal", normal_style)
+	btn.add_theme_stylebox_override("hover", hover_style)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	
+	var font = SystemFont.new()
+	font.font_names = ["Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"]
+	font.font_weight = 600
+	btn.add_theme_font_override("font", font)
+
+
+func _setup_modern_panel(panel: PanelContainer, is_circle: bool = false, is_urgent: bool = false) -> void:
+	panel.resized.connect(func(): panel.pivot_offset = panel.size / 2.0)
+	
+	var style = StyleBoxFlat.new()
+	if is_urgent:
+		style.bg_color = Color("#EF4444") # red-500
+		style.shadow_color = Color(0.937, 0.266, 0.266, 0.4)
+	else:
+		style.bg_color = Color("#2563EB") # primary-600
+		style.shadow_color = Color(0.145, 0.388, 0.922, 0.4)
+		
+	style.set_corner_radius_all(100 if is_circle else 32)
+	style.shadow_size = 20
+	style.shadow_offset = Vector2(0, 8)
+	
+	if not is_circle:
+		style.content_margin_left = 40
+		style.content_margin_right = 40
+		style.content_margin_top = 20
+		style.content_margin_bottom = 20
+		
+	panel.visibility_changed.connect(func():
+		if panel.visible:
+			panel.scale = Vector2(0.5, 0.5)
+			var tw = get_tree().create_tween()
+			tw.tween_property(panel, "scale", Vector2(1.0, 1.0), 0.5).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	)
+		
+	panel.add_theme_stylebox_override("panel", style)
+
+
+func _setup_modern_label(label: Label, is_bold: bool = false) -> void:
+	var font = SystemFont.new()
+	font.font_names = ["Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"]
+	font.font_weight = 700 if is_bold else 600
+	label.add_theme_font_override("font", font)
+
+
+# ==============================================================
 #  UI  (1280 × 720 landscape, Vietnamese)
 # ==============================================================
 
@@ -411,23 +520,17 @@ func _setup_ui() -> void:
 	canvas.name = "UI"
 	add_child(canvas)
 
-	# Pill StyleBox for text
-	var pill_style: StyleBoxFlat = StyleBoxFlat.new()
-	pill_style.bg_color = Color(0, 0, 0, 0.45) # Semi-transparent black
-	pill_style.set_corner_radius_all(100)
-	pill_style.content_margin_left = 40
-	pill_style.content_margin_right = 40
-	pill_style.content_margin_top = 15
-	pill_style.content_margin_bottom = 15
-	
-	# Circle StyleBox for score
-	var circle_style: StyleBoxFlat = StyleBoxFlat.new()
-	circle_style.bg_color = Color(0, 0, 0, 0.45)
-	circle_style.set_corner_radius_all(100)
-
 	# --- Score Panel ---
 	score_panel = PanelContainer.new()
-	score_panel.add_theme_stylebox_override("panel", circle_style)
+	_setup_modern_panel(score_panel, true)
+	
+	var custom_score_style = score_panel.get_theme_stylebox("panel").duplicate()
+	custom_score_style.content_margin_left = 0
+	custom_score_style.content_margin_right = 0
+	custom_score_style.content_margin_top = 0
+	custom_score_style.content_margin_bottom = 0
+	score_panel.add_theme_stylebox_override("panel", custom_score_style)
+	
 	score_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	score_panel.offset_top = 20
 	score_panel.custom_minimum_size = Vector2(100, 100)
@@ -441,14 +544,24 @@ func _setup_ui() -> void:
 	score_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	score_label.add_theme_font_size_override("font_size", 64)
 	score_label.add_theme_color_override("font_color", Color.WHITE)
+	_setup_modern_label(score_label, true)
 	score_panel.add_child(score_label)
 
 	# --- Message Panel ---
 	message_panel = PanelContainer.new()
-	message_panel.add_theme_stylebox_override("panel", pill_style)
-	message_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_setup_modern_panel(message_panel, true)
+	var custom_style = message_panel.get_theme_stylebox("panel").duplicate()
+	custom_style.content_margin_left = 60
+	custom_style.content_margin_right = 60
+	custom_style.content_margin_top = 30
+	custom_style.content_margin_bottom = 30
+	message_panel.add_theme_stylebox_override("panel", custom_style)
+	
+	message_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	message_panel.offset_top = 20
+	message_panel.custom_minimum_size = Vector2(150, 0)
 	message_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	message_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	message_panel.grow_vertical = Control.GROW_DIRECTION_END
 	canvas.add_child(message_panel)
 
 	message_label = Label.new()
@@ -457,23 +570,31 @@ func _setup_ui() -> void:
 	message_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	message_label.add_theme_font_size_override("font_size", 32)
 	message_label.add_theme_color_override("font_color", Color.WHITE)
+	_setup_modern_label(message_label, false)
 	message_panel.add_child(message_label)
+
 
 	# --- Game Over Panel ---
 	game_over_panel = PanelContainer.new()
-	game_over_panel.add_theme_stylebox_override("panel", pill_style)
-	game_over_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_setup_modern_panel(game_over_panel, false)
+	
+	var custom_go_style = game_over_panel.get_theme_stylebox("panel").duplicate()
+	custom_go_style.content_margin_left = 60
+	custom_go_style.content_margin_right = 60
+	custom_go_style.content_margin_top = 30
+	custom_go_style.content_margin_bottom = 30
+	game_over_panel.add_theme_stylebox_override("panel", custom_go_style)
+	
+	game_over_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	game_over_panel.offset_top = 20
 	game_over_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	game_over_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	game_over_panel.grow_vertical = Control.GROW_DIRECTION_END
 	game_over_panel.visible = false
 	canvas.add_child(game_over_panel)
 
 	# --- Rotate Device Mobile Panel ---
-	var urgent_style: StyleBoxFlat = pill_style.duplicate()
-	urgent_style.bg_color = Color(0.8, 0.1, 0.1, 0.9)
-	
 	rotate_panel = PanelContainer.new()
-	rotate_panel.add_theme_stylebox_override("panel", urgent_style)
+	_setup_modern_panel(rotate_panel, false, true)
 	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
 	rotate_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	rotate_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -489,6 +610,7 @@ func _setup_ui() -> void:
 	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	rotate_label.add_theme_font_size_override("font_size", 42)
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
+	_setup_modern_label(rotate_label, true)
 	rotate_panel.add_child(rotate_label)
 
 	game_over_container = VBoxContainer.new()
@@ -496,11 +618,12 @@ func _setup_ui() -> void:
 	game_over_panel.add_child(game_over_container)
 
 	var go_label: Label = Label.new()
-	go_label.text = "KẾT THÚC"
+	go_label.text = "TOANG RỒI BẠN YÊU DẤU ƠI!"
 	go_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	go_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	go_label.add_theme_font_size_override("font_size", 52)
-	go_label.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+	go_label.add_theme_color_override("font_color", Color.WHITE)
+	_setup_modern_label(go_label, true)
 	game_over_container.add_child(go_label)
 
 	var spacer1: Control = Control.new()
@@ -513,14 +636,16 @@ func _setup_ui() -> void:
 	score_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
 	score_disp.add_theme_font_size_override("font_size", 36)
 	score_disp.add_theme_color_override("font_color", Color.WHITE)
+	_setup_modern_label(score_disp, true)
 	game_over_container.add_child(score_disp)
 
 	var best_disp: Label = Label.new()
 	best_disp.name = "BestDisplay"
 	best_disp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	best_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
-	best_disp.add_theme_font_size_override("font_size", 30)
-	best_disp.add_theme_color_override("font_color", Color(1, 0.84, 0))
+	best_disp.add_theme_font_size_override("font_size", 36)
+	best_disp.add_theme_color_override("font_color", Color(1, 0.84, 0)) # Gold text for Best
+	_setup_modern_label(best_disp, true)
 	game_over_container.add_child(best_disp)
 
 	var spacer2: Control = Control.new()
@@ -528,43 +653,43 @@ func _setup_ui() -> void:
 	game_over_container.add_child(spacer2)
 
 	var restart_lbl: Label = Label.new()
-	restart_lbl.text = "Nhấn chuột hoặc phím Space để chơi lại"
+	restart_lbl.text = "Hãy nhấn chuột hoặc phím Space để chơi lại nha bạn yêu dấu ơi!"
 	restart_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	restart_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
-	restart_lbl.add_theme_font_size_override("font_size", 28)
+	restart_lbl.add_theme_font_size_override("font_size", 24)
 	restart_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.85))
+	_setup_modern_label(restart_lbl, false)
 	game_over_container.add_child(restart_lbl)
 
 	# --- Mute and Pause Buttons ---
-	var btn_style: StyleBoxFlat = StyleBoxFlat.new()
-	btn_style.bg_color = Color(0, 0, 0, 0.45)
-	btn_style.set_corner_radius_all(100)
 
 	btn_mute = Button.new()
-	btn_mute.text = "🔇" if is_muted else "🔊"
-	btn_mute.add_theme_font_size_override("font_size", 32)
-	btn_mute.add_theme_stylebox_override("normal", btn_style)
-	btn_mute.add_theme_stylebox_override("hover", btn_style)
-	btn_mute.add_theme_stylebox_override("pressed", btn_style)
-	btn_mute.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	btn_mute.custom_minimum_size = Vector2(80, 80)
-	btn_mute.position = Vector2(20, 20)
+	btn_mute.focus_mode = Control.FOCUS_NONE
+	btn_mute.icon = preload("res://assets/volume-x.svg") if is_muted else preload("res://assets/volume-2.svg")
+	btn_mute.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btn_mute.expand_icon = true
+	btn_mute.add_theme_constant_override("icon_max_width", 42)
+	btn_mute.custom_minimum_size = Vector2(100, 100)
+	btn_mute.position = Vector2(25, 25)
+	
 	btn_mute.pressed.connect(_on_mute_pressed)
 	btn_mute.process_mode = Node.PROCESS_MODE_ALWAYS
 	canvas.add_child(btn_mute)
+	_setup_modern_button(btn_mute)
 
 	btn_pause = Button.new()
-	btn_pause.text = "⏸"
-	btn_pause.add_theme_font_size_override("font_size", 32)
-	btn_pause.add_theme_stylebox_override("normal", btn_style)
-	btn_pause.add_theme_stylebox_override("hover", btn_style)
-	btn_pause.add_theme_stylebox_override("pressed", btn_style)
-	btn_pause.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	btn_pause.custom_minimum_size = Vector2(80, 80)
-	btn_pause.position = Vector2(120, 20)
+	btn_pause.focus_mode = Control.FOCUS_NONE
+	btn_pause.icon = preload("res://assets/pause.svg")
+	btn_pause.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btn_pause.expand_icon = true
+	btn_pause.add_theme_constant_override("icon_max_width", 42)
+	btn_pause.custom_minimum_size = Vector2(100, 100)
+	btn_pause.position = Vector2(145, 25)
+	
 	btn_pause.pressed.connect(_on_pause_pressed)
 	btn_pause.process_mode = Node.PROCESS_MODE_ALWAYS
 	canvas.add_child(btn_pause)
+	_setup_modern_button(btn_pause)
 
 
 # ==============================================================
@@ -576,6 +701,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 		
 	if not _is_action_event(event):
+		return
+
+	# Nếu game đang bị tạm dừng, cho phép dùng Input để unpause
+	if get_tree().paused and (state == GameState.PLAYING or state == GameState.READY):
+		_on_pause_pressed()
 		return
 
 	match state:
@@ -605,14 +735,24 @@ func _on_pause_pressed() -> void:
 	if state == GameState.PLAYING or state == GameState.READY:
 		var is_paused: bool = get_tree().paused
 		get_tree().paused = !is_paused
-		btn_pause.text = "▶" if !is_paused else "⏸"
+		
+		if !is_paused: # Tức là hiện tại đang chuyển sang Pause
+			btn_pause.icon = preload("res://assets/play.svg")
+			score_panel.visible = false
+		else:
+			btn_pause.icon = preload("res://assets/pause.svg")
+			if state == GameState.READY:
+				message_panel.visible = true
+			else:
+				message_panel.visible = false
+				score_panel.visible = true
 
 
 func _on_mute_pressed() -> void:
 	is_muted = !is_muted
 	var bus_idx = AudioServer.get_bus_index("Master")
 	AudioServer.set_bus_mute(bus_idx, is_muted)
-	btn_mute.text = "🔇" if is_muted else "🔊"
+	btn_mute.icon = preload("res://assets/volume-x.svg") if is_muted else preload("res://assets/volume-2.svg")
 
 
 # ==============================================================
@@ -620,10 +760,13 @@ func _on_mute_pressed() -> void:
 # ==============================================================
 
 func _show_ready_screen() -> void:
-	message_label.text = "Nhấn chuột hoặc phím Space để bắt đầu"
+	message_label.text = "Hãy nhấn chuột hoặc phím Space để bắt đầu nha bạn yêu dấu ơi!"
 	message_panel.visible = true
 	score_panel.visible = false
 	game_over_panel.visible = false
+	
+	if btn_pause:
+		btn_pause.visible = false
 
 
 func _start_game() -> void:
@@ -633,6 +776,10 @@ func _start_game() -> void:
 	score_label.text = "0"
 	score_panel.visible = true
 	message_panel.visible = false
+	
+	if btn_pause:
+		btn_pause.visible = true
+		
 	bird.start()
 	
 	# Spawn initial "pipe train" to ensure uniform spacing from the start
@@ -668,10 +815,20 @@ func _on_pipe_scored() -> void:
 		score += 1
 		score_label.text = str(score)
 		sound.play_score()
+		
+		# Bump animation cho điểm số
+		var tw = get_tree().create_tween()
+		score_panel.pivot_offset = score_panel.size / 2.0
+		tw.tween_property(score_panel, "scale", Vector2(1.2, 1.2), 0.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(score_panel, "scale", Vector2(1.0, 1.0), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 func _on_bird_died() -> void:
 	state = GameState.GAME_OVER
+	
+	if btn_pause:
+		btn_pause.visible = false
+		
 	spawn_timer.stop()
 	_restart_cooldown = true
 	sound.stop_bgm()
@@ -700,7 +857,7 @@ func _on_bird_died() -> void:
 func _restart_game() -> void:
 	if get_tree().paused:
 		get_tree().paused = false
-		btn_pause.text = "⏸"
+		btn_pause.icon = preload("res://assets/pause.svg")
 		
 	state = GameState.READY
 

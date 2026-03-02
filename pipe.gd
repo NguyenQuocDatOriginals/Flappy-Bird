@@ -58,7 +58,14 @@ func setup(gap_center: float, gap_size: float) -> void:
 func _create_pipe_body(pipe_name: String, center_y: float, height: float) -> void:
 	var body: StaticBody3D = StaticBody3D.new()
 	body.name = pipe_name
-	body.collision_layer = 2
+	
+	# Đặt Bottom Pipe về Layer 4 (Giống Ground) để hứng chim nhảy hoặc chết rơi xuống
+	# Đặt Top Pipe về Layer 2 để chim chết có thể rơi xuyên ngang
+	if pipe_name == "BottomPipe":
+		body.collision_layer = 4
+	else:
+		body.collision_layer = 2
+		
 	body.collision_mask = 0
 
 	var mesh_inst: MeshInstance3D = MeshInstance3D.new()

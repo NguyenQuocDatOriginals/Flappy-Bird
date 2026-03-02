@@ -71,7 +71,7 @@ func _make_wav(data: PackedByteArray, loop: bool = false) -> AudioStreamWAV:
 	if loop:
 		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		wav.loop_begin = 0
-		wav.loop_end = data.size() / 2
+		wav.loop_end = int(data.size() / 2.0)
 	wav.data = data
 	return wav
 
