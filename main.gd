@@ -36,6 +36,7 @@ var is_mobile_portrait: bool = false
 var rotate_panel: PanelContainer = null
 
 var _restart_cooldown: bool = false
+var _just_unpaused: bool = false
 
 # Parallax background tracking: [{node, speed, wrap_width}]
 var _bg_elements: Array = []
@@ -447,6 +448,8 @@ func _create_flag() -> void:
 # ==============================================================
 
 func _process(delta: float) -> void:
+	_just_unpaused = false
+	
 	if state != GameState.PLAYING or get_tree().paused:
 		return
 	
@@ -772,6 +775,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_pause_pressed()
 		return
 
+	# Nếu game vừa được unpause trong frame này, bỏ qua các input trễ/mô phỏng để tránh flap nhầm
+	if _just_unpaused:
+		return
+		
 	match state:
 		GameState.READY:
 			_start_game()
@@ -807,6 +814,7 @@ func _on_pause_pressed() -> void:
 			sound.set_bgm_paused(true)
 		else:
 			btn_pause.icon = preload("res://assets/pause.svg")
+			_just_unpaused = true # Khóa input trong 1 frame
 			sound.set_bgm_paused(false)
 			if state == GameState.READY:
 				message_panel.visible = true
@@ -841,6 +849,9 @@ func _show_ready_screen() -> void:
 
 
 func _start_game() -> void:
+	if game_over_panel:
+		game_over_panel.visible = false
+		
 	state = GameState.PLAYING
 	score = 0
 	current_speed = 3.0
@@ -931,15 +942,20 @@ func _on_bird_died() -> void:
 	_restart_cooldown = false
 
 
-func _restart_game() -> void:
+func _restart_game(start_immediately: bool = false) -> void:
 	if get_tree().paused:
 		get_tree().paused = false
 		btn_pause.icon = preload("res://assets/pause.svg")
 		
-	state = GameState.READY
-
 	for pipe: Node in pipe_container.get_children():
 		pipe.free()
 
 	bird.reset()
-	_show_ready_screen()
+	
+	if start_immediately:
+		_start_game()
+		bird.flap()
+		sound.play_flap()
+	else:
+		state = GameState.READY
+		_show_ready_screen()
