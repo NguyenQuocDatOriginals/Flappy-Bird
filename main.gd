@@ -286,6 +286,7 @@ func _setup_background() -> void:
 	_create_mountains()
 	_create_urban_area()
 	_create_flag()
+	_create_posters()
 
 func _create_sea() -> void:
 	# No longer used to keep the background purely Banana Green
@@ -418,7 +419,7 @@ func _create_flag() -> void:
 		add_child(flag_group)
 		_register_bg(flag_group, -8)
 
-		# Flagpole
+		# Flagpole - Reduced back to 10m
 		var pole: MeshInstance3D = MeshInstance3D.new()
 		var pole_mesh: CylinderMesh = CylinderMesh.new()
 		pole_mesh.top_radius = 0.1
@@ -431,7 +432,7 @@ func _create_flag() -> void:
 		pole.position.y = 5.0
 		flag_group.add_child(pole)
 
-		# The Flag itself
+		# The Flag itself - Reduced to 3.0x2.0
 		var flag: MeshInstance3D = MeshInstance3D.new()
 		var flag_mesh: QuadMesh = QuadMesh.new()
 		flag_mesh.size = Vector2(3.0, 2.0)
@@ -443,8 +444,74 @@ func _create_flag() -> void:
 		flag_mesh.material = flag_mat
 		
 		flag.mesh = flag_mesh
-		flag.position = Vector3(1.6, 8.5, 0)
+		flag.position = Vector3(1.6, 9.0, 0) # Top of 10m pole (flag height is 2.0)
 		flag_group.add_child(flag)
+
+
+func _create_posters() -> void:
+	var poster_tex: Texture2D = load("res://assets/Bản đồ Việt Nam.jpeg")
+	if not poster_tex:
+		return
+		
+	var tex_size: Vector2 = poster_tex.get_size()
+	var aspect_ratio: float = tex_size.y / tex_size.x # Height / Width
+	
+	var board_width: float = 6.0 # Final refined width
+	var board_height: float = board_width * aspect_ratio
+	
+	var intervals: Array = [-100, -70, -40, -10, 20, 50, 80, 110]
+	for x_pos in intervals:
+		var group: Node3D = Node3D.new()
+		group.position = Vector3(x_pos + 8.5, 0, -8.1)
+		group.process_mode = Node.PROCESS_MODE_PAUSABLE
+		add_child(group)
+		_register_bg(group, -8.1)
+
+		# Poster legs (two feet) - Positioned behind (z = -0.1)
+		var leg_mat: StandardMaterial3D = StandardMaterial3D.new()
+		leg_mat.albedo_color = Color(0.3, 0.3, 0.3)
+		
+		var leg_mesh: CylinderMesh = CylinderMesh.new()
+		leg_mesh.top_radius = 0.12 # Matching scale for 6.0 width
+		leg_mesh.bottom_radius = 0.12
+		leg_mesh.height = 12.0
+		leg_mesh.material = leg_mat
+		
+		var leg_l: MeshInstance3D = MeshInstance3D.new()
+		leg_l.mesh = leg_mesh
+		leg_l.position = Vector3(-1.8, 6.0, -0.1) 
+		group.add_child(leg_l)
+		
+		var leg_r: MeshInstance3D = MeshInstance3D.new()
+		leg_r.mesh = leg_mesh
+		leg_r.position = Vector3(1.8, 6.0, -0.1)
+		group.add_child(leg_r)
+
+		# The Poster Board - Dynamic size to keep original aspect ratio
+		var board: MeshInstance3D = MeshInstance3D.new()
+		var board_mesh: QuadMesh = QuadMesh.new()
+		board_mesh.size = Vector2(board_width, board_height)
+		
+		var board_mat: StandardMaterial3D = StandardMaterial3D.new()
+		board_mat.albedo_texture = poster_tex
+		board_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		board_mesh.material = board_mat
+		
+		board.mesh = board_mesh
+		# Position the board clearly above ground
+		board.position = Vector3(0, 6.0 + board_height/2.0, 0.1) 
+		group.add_child(board)
+		
+		# Board frame/back
+		var back: MeshInstance3D = MeshInstance3D.new()
+		var back_mesh: BoxMesh = BoxMesh.new()
+		back_mesh.size = Vector3(board_width + 0.3, board_height + 0.3, 0.15)
+		var back_mat: StandardMaterial3D = StandardMaterial3D.new()
+		back_mat.albedo_color = Color(0.15, 0.15, 0.15)
+		back_mesh.material = back_mat
+		back.mesh = back_mesh
+		back.position = Vector3(0, 6.0 + board_height/2.0, 0)
+		group.add_child(back)
 
 
 # ==============================================================
@@ -480,6 +547,7 @@ func _reset_background() -> void:
 # ==============================================================
 
 func _setup_modern_button(btn: Button) -> void:
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.resized.connect(func(): btn.pivot_offset = btn.size / 2.0)
 	
 	btn.mouse_entered.connect(func():
@@ -918,12 +986,12 @@ func _on_pipe_scored() -> void:
 
 func _on_bird_died() -> void:
 	state = GameState.GAME_OVER
+	_restart_cooldown = true # Lock restart during death sequence
 	
 	if btn_pause:
 		btn_pause.visible = false
 		
 	spawn_timer.stop()
-	_restart_cooldown = false # Instant restart allowed
 	sound.stop_bgm()
 	sound.play_hit()
 
@@ -934,11 +1002,11 @@ func _on_bird_died() -> void:
 		best_score = score
 
 	await get_tree().create_timer(0.4).timeout
-	if state != GameState.GAME_OVER: return # Guard: check if game was restarted
+	if state != GameState.GAME_OVER: return
 	sound.play_die()
 
 	await get_tree().create_timer(0.6).timeout
-	if state != GameState.GAME_OVER: return # Guard: check if game was restarted
+	if state != GameState.GAME_OVER: return
 
 	score_panel.visible = false
 	game_over_panel.visible = true
@@ -950,7 +1018,7 @@ func _on_bird_died() -> void:
 	var action_text = "chạm vào màn hình" if is_mobile else "nhấn chuột hoặc phím Space"
 	game_over_container.get_node("RestartInstruction").text = "Hãy " + action_text + " để chơi lại nha bạn yêu dấu ơi!"
 
-	_restart_cooldown = false
+	_restart_cooldown = false # Unlock restart now that panel is visible
 
 
 func _restart_game(start_immediately: bool = false) -> void:
