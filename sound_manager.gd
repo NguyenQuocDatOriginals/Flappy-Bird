@@ -10,6 +10,7 @@ var _score_player: AudioStreamPlayer = null
 var _hit_player: AudioStreamPlayer = null
 var _die_player: AudioStreamPlayer = null
 var _bgm_player: AudioStreamPlayer = null
+var _is_bgm_should_play: bool = false
 
 
 func _ready() -> void:
@@ -19,6 +20,18 @@ func _ready() -> void:
 	_hit_player = _make_player(_gen_hit(), -2.0)
 	_die_player = _make_player(_gen_die(), -2.0)
 	_bgm_player = _make_player(_gen_bgm(), -14.0)
+
+
+func _process(_delta: float) -> void:
+	# Heartbeat: Ensure BGM is actually playing/paused as intended
+	if _is_bgm_should_play:
+		if not _bgm_player.playing:
+			_bgm_player.play()
+		if _bgm_player.stream_paused:
+			_bgm_player.stream_paused = false
+	else:
+		if _bgm_player.playing and not _bgm_player.stream_paused:
+			_bgm_player.stream_paused = true
 
 
 func play_flap() -> void:
@@ -38,15 +51,22 @@ func play_die() -> void:
 
 
 func play_bgm() -> void:
+	_is_bgm_should_play = true
 	_bgm_player.play()
 
 
 func stop_bgm() -> void:
+	_is_bgm_should_play = false
 	_bgm_player.stop()
 
 
 func set_bgm_paused(p: bool) -> void:
+	_is_bgm_should_play = !p
 	_bgm_player.stream_paused = p
+	
+	# Force an immediate check
+	if not p and not _bgm_player.playing:
+		_bgm_player.play()
 
 
 # ------------------------------------------------------------------

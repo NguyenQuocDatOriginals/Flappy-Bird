@@ -490,19 +490,19 @@ func _setup_modern_button(btn: Button) -> void:
 	)
 	
 	var normal_style = StyleBoxFlat.new()
-	normal_style.bg_color = Color("#2563EB") # primary-600
+	normal_style.bg_color = Color("#2563EB")
 	normal_style.set_corner_radius_all(100)
-	normal_style.shadow_color = Color(0.145, 0.388, 0.922, 0.4) # shadow-primary-600/40
+	normal_style.shadow_color = Color(0.145, 0.388, 0.922, 0.4)
 	normal_style.shadow_size = 15
 	normal_style.shadow_offset = Vector2(0, 4)
 	
 	var hover_style = normal_style.duplicate()
-	hover_style.bg_color = Color("#3B82F6") # primary-500
+	hover_style.bg_color = Color("#3B82F6")
 	hover_style.shadow_size = 20
 	hover_style.shadow_offset = Vector2(0, 8)
 	
 	var pressed_style = normal_style.duplicate()
-	pressed_style.bg_color = Color("#1D4ED8") # primary-700
+	pressed_style.bg_color = Color("#2563EB")
 	pressed_style.shadow_size = 5
 	pressed_style.shadow_offset = Vector2(0, 2)
 	
