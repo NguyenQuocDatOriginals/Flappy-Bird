@@ -27,7 +27,6 @@ var game_over_container: VBoxContainer = null
 var score_panel: PanelContainer = null
 var message_panel: PanelContainer = null
 var game_over_panel: PanelContainer = null
-var game_over_panel: PanelContainer = null
 
 var btn_mute: Button = null
 var btn_pause: Button = null
