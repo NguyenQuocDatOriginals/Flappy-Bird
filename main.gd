@@ -105,7 +105,9 @@ func _check_mobile_orientation() -> void:
 func _set_game_visibility(is_visible: bool) -> void:
 	# UI Elements
 	if btn_mute: btn_mute.visible = is_visible
-	if btn_pause: btn_pause.visible = is_visible
+	if btn_pause: 
+		# Pause button only visible during PLAYING state in landscape
+		btn_pause.visible = is_visible and state == GameState.PLAYING
 	
 	if is_visible:
 		# Restore based on state
@@ -676,10 +678,10 @@ func _setup_ui() -> void:
 	if is_mobile:
 		rotate_panel.custom_minimum_size = Vector2(150, 0)
 		var match_style = rotate_panel.get_theme_stylebox("panel").duplicate()
-		match_style.content_margin_left = 120
-		match_style.content_margin_right = 120
-		match_style.content_margin_top = 60
-		match_style.content_margin_bottom = 60
+		match_style.content_margin_left = 60
+		match_style.content_margin_right = 60
+		match_style.content_margin_top = 40
+		match_style.content_margin_bottom = 40
 		rotate_panel.add_theme_stylebox_override("panel", match_style)
 	
 	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
@@ -695,7 +697,7 @@ func _setup_ui() -> void:
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	rotate_label.add_theme_font_size_override("font_size", 64) # Matched to pause_label
+	rotate_label.add_theme_font_size_override("font_size", 48) # Reduced to fit mobile portrait
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(rotate_label, true)
 	rotate_panel.add_child(rotate_label)
@@ -927,7 +929,7 @@ func _on_bird_died() -> void:
 		btn_pause.visible = false
 		
 	spawn_timer.stop()
-	_restart_cooldown = true
+	_restart_cooldown = false # Instant restart allowed
 	sound.stop_bgm()
 	sound.play_hit()
 
@@ -938,9 +940,11 @@ func _on_bird_died() -> void:
 		best_score = score
 
 	await get_tree().create_timer(0.4).timeout
+	if state != GameState.GAME_OVER: return # Guard: check if game was restarted
 	sound.play_die()
 
 	await get_tree().create_timer(0.6).timeout
+	if state != GameState.GAME_OVER: return # Guard: check if game was restarted
 
 	score_panel.visible = false
 	game_over_panel.visible = true
