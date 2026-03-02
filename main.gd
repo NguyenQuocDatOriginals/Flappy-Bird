@@ -27,8 +27,7 @@ var game_over_container: VBoxContainer = null
 var score_panel: PanelContainer = null
 var message_panel: PanelContainer = null
 var game_over_panel: PanelContainer = null
-var pause_panel: PanelContainer = null
-var pause_label: Label = null
+var game_over_panel: PanelContainer = null
 
 var btn_mute: Button = null
 var btn_pause: Button = null
@@ -111,7 +110,7 @@ func _set_game_visibility(is_visible: bool) -> void:
 	if btn_pause: 
 		# Pause button only visible during PLAYING state in landscape
 		btn_pause.visible = is_visible and state == GameState.PLAYING
-	
+
 	if is_visible:
 		# Restore based on state
 		match state:
@@ -119,22 +118,18 @@ func _set_game_visibility(is_visible: bool) -> void:
 				if message_panel: message_panel.visible = true
 				if score_panel: score_panel.visible = false
 				if game_over_panel: game_over_panel.visible = false
-				if pause_panel: pause_panel.visible = get_tree().paused
 			GameState.PLAYING:
 				if message_panel: message_panel.visible = false
 				if score_panel: score_panel.visible = !get_tree().paused
 				if game_over_panel: game_over_panel.visible = false
-				if pause_panel: pause_panel.visible = get_tree().paused
 			GameState.GAME_OVER:
 				if message_panel: message_panel.visible = false
 				if score_panel: score_panel.visible = false
 				if game_over_panel: game_over_panel.visible = true
-				if pause_panel: pause_panel.visible = false
 	else:
 		if message_panel: message_panel.visible = false
 		if score_panel: score_panel.visible = false
 		if game_over_panel: game_over_panel.visible = false
-		if pause_panel: pause_panel.visible = false
 
 	# Bird visibility
 	if bird:
@@ -624,42 +619,6 @@ func _setup_ui() -> void:
 	_setup_modern_label(message_label, false)
 	message_panel.add_child(message_label)
 
-	# --- Capsule Pause Panel ---
-	pause_panel = PanelContainer.new()
-	_setup_modern_panel(pause_panel, true)
-	var custom_pause_style = pause_panel.get_theme_stylebox("panel").duplicate()
-	if _is_mobile:
-		custom_pause_style.content_margin_left = 120
-		custom_pause_style.content_margin_right = 120
-		custom_pause_style.content_margin_top = 60
-		custom_pause_style.content_margin_bottom = 60
-	else:
-		custom_pause_style.content_margin_left = 40
-		custom_pause_style.content_margin_right = 40
-		custom_pause_style.content_margin_top = 20
-		custom_pause_style.content_margin_bottom = 20
-	pause_panel.add_theme_stylebox_override("panel", custom_pause_style)
-	
-	# Matching score_panel position exactly
-	pause_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	pause_panel.offset_top = -40 if _is_mobile else -15
-	pause_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	pause_panel.grow_vertical = Control.GROW_DIRECTION_END
-	pause_panel.custom_minimum_size = Vector2(180, 0) if _is_mobile else Vector2(80, 0)
-	pause_panel.visible = false
-	canvas.add_child(pause_panel)
-
-	pause_label = Label.new()
-	pause_label.text = "Đã tạm dừng trò chơi rồi nè bạn yêu dấu ơi!"
-	pause_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pause_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	pause_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	pause_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 28)
-	pause_label.add_theme_color_override("font_color", Color.WHITE)
-	_setup_modern_label(pause_label, false)
-	pause_panel.add_child(pause_label)
-
-
 	# --- Game Over Panel ---
 	game_over_panel = PanelContainer.new()
 	_setup_modern_panel(game_over_panel, false)
@@ -678,7 +637,7 @@ func _setup_ui() -> void:
 	game_over_panel.add_theme_stylebox_override("panel", custom_go_style)
 	
 	game_over_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	game_over_panel.offset_top = 30 if _is_mobile else 15
+	game_over_panel.offset_top = 30 if _is_mobile else 10 # Aligned with message_panel
 	game_over_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	game_over_panel.grow_vertical = Control.GROW_DIRECTION_END
 	game_over_panel.visible = false
@@ -694,10 +653,10 @@ func _setup_ui() -> void:
 	if is_mobile:
 		rotate_panel.custom_minimum_size = Vector2(150, 0)
 		var match_style = rotate_panel.get_theme_stylebox("panel").duplicate()
-		match_style.content_margin_left = 40
-		match_style.content_margin_right = 40
-		match_style.content_margin_top = 30
-		match_style.content_margin_bottom = 30
+		match_style.content_margin_left = 30
+		match_style.content_margin_right = 30
+		match_style.content_margin_top = 20
+		match_style.content_margin_bottom = 20
 		rotate_panel.add_theme_stylebox_override("panel", match_style)
 	
 	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
@@ -713,7 +672,7 @@ func _setup_ui() -> void:
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	rotate_label.add_theme_font_size_override("font_size", 48 if _is_mobile else 24) # Ensure it's large on mobile
+	rotate_label.add_theme_font_size_override("font_size", 40 if _is_mobile else 20) # Shrunk slightly
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(rotate_label, true)
 	rotate_panel.add_child(rotate_label)
@@ -846,7 +805,6 @@ func _on_pause_pressed() -> void:
 			btn_pause.icon = preload("res://assets/play.svg")
 			score_panel.visible = false
 			message_panel.visible = false
-			pause_panel.visible = true
 			sound.set_bgm_paused(true)
 		else:
 			btn_pause.icon = preload("res://assets/pause.svg")
