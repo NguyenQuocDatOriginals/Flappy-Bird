@@ -53,7 +53,7 @@ func _ready() -> void:
 	# Lắng nghe sự thay đổi kích thước màn hình
 	get_tree().root.size_changed.connect(_on_size_changed)
 
-	_check_mobile_orientation() # Check platform BEFORE anything else
+	_check_mobile_orientation() # Phase 1: Set _is_mobile flag
 	_setup_sound()
 	_setup_environment()
 	_setup_camera()
@@ -63,6 +63,7 @@ func _ready() -> void:
 	_setup_pipes()
 	_setup_background()
 	_setup_ui()
+	_check_mobile_orientation() # Phase 2: Update UI visibility (like rotate_panel)
 	
 	_show_ready_screen()
 
@@ -520,7 +521,7 @@ func _setup_modern_button(btn: Button) -> void:
 	font.font_names = ["Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"]
 	font.font_weight = 600
 	btn.add_theme_font_override("font", font)
-	btn.add_theme_font_size_override("font_size", 32 if _is_mobile else 20)
+	btn.add_theme_font_size_override("font_size", 36 if _is_mobile else 18)
 
 
 func _setup_modern_panel(panel: PanelContainer, is_circle: bool = false, is_urgent: bool = false) -> void:
@@ -539,10 +540,10 @@ func _setup_modern_panel(panel: PanelContainer, is_circle: bool = false, is_urge
 	style.shadow_offset = Vector2(0, 8)
 	
 	if not is_circle:
-		style.content_margin_left = 40 if _is_mobile else 24
-		style.content_margin_right = 40 if _is_mobile else 24
-		style.content_margin_top = 20 if _is_mobile else 12
-		style.content_margin_bottom = 20 if _is_mobile else 12
+		style.content_margin_left = 50 if _is_mobile else 20
+		style.content_margin_right = 50 if _is_mobile else 20
+		style.content_margin_top = 25 if _is_mobile else 10
+		style.content_margin_bottom = 25 if _is_mobile else 10
 		
 	panel.visibility_changed.connect(func():
 		if panel.visible:
@@ -582,8 +583,8 @@ func _setup_ui() -> void:
 	score_panel.add_theme_stylebox_override("panel", custom_score_style)
 	
 	score_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	score_panel.offset_top = 20 if _is_mobile else 10
-	score_panel.custom_minimum_size = Vector2(100, 100) if _is_mobile else Vector2(70, 70)
+	score_panel.offset_top = 30 if _is_mobile else 10
+	score_panel.custom_minimum_size = Vector2(110, 110) if _is_mobile else Vector2(60, 60)
 	score_panel.visible = false
 	canvas.add_child(score_panel)
 
@@ -592,7 +593,7 @@ func _setup_ui() -> void:
 	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	score_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	score_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 36)
+	score_label.add_theme_font_size_override("font_size", 72 if _is_mobile else 32)
 	score_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(score_label, true)
 	score_panel.add_child(score_label)
@@ -601,15 +602,15 @@ func _setup_ui() -> void:
 	message_panel = PanelContainer.new()
 	_setup_modern_panel(message_panel, true)
 	var custom_style = message_panel.get_theme_stylebox("panel").duplicate()
-	custom_style.content_margin_left = 60
-	custom_style.content_margin_right = 60
-	custom_style.content_margin_top = 30
-	custom_style.content_margin_bottom = 30
+	custom_style.content_margin_left = 60 if _is_mobile else 30
+	custom_style.content_margin_right = 60 if _is_mobile else 30
+	custom_style.content_margin_top = 30 if _is_mobile else 15
+	custom_style.content_margin_bottom = 30 if _is_mobile else 15
 	message_panel.add_theme_stylebox_override("panel", custom_style)
 	
 	message_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	message_panel.offset_top = 20 if _is_mobile else 10
-	message_panel.custom_minimum_size = Vector2(150, 0) if _is_mobile else Vector2(100, 0)
+	message_panel.offset_top = 30 if _is_mobile else 10
+	message_panel.custom_minimum_size = Vector2(180, 0) if _is_mobile else Vector2(100, 0)
 	message_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	message_panel.grow_vertical = Control.GROW_DIRECTION_END
 	canvas.add_child(message_panel)
@@ -618,7 +619,7 @@ func _setup_ui() -> void:
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	message_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	message_label.add_theme_font_size_override("font_size", 32 if _is_mobile else 20)
+	message_label.add_theme_font_size_override("font_size", 36 if _is_mobile else 18)
 	message_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(message_label, false)
 	message_panel.add_child(message_label)
@@ -633,18 +634,18 @@ func _setup_ui() -> void:
 		custom_pause_style.content_margin_top = 60
 		custom_pause_style.content_margin_bottom = 60
 	else:
-		custom_pause_style.content_margin_left = 60
-		custom_pause_style.content_margin_right = 60
-		custom_pause_style.content_margin_top = 30
-		custom_pause_style.content_margin_bottom = 30
+		custom_pause_style.content_margin_left = 40
+		custom_pause_style.content_margin_right = 40
+		custom_pause_style.content_margin_top = 20
+		custom_pause_style.content_margin_bottom = 20
 	pause_panel.add_theme_stylebox_override("panel", custom_pause_style)
 	
 	# Matching score_panel position exactly
 	pause_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	pause_panel.offset_top = -30 if _is_mobile else -15
+	pause_panel.offset_top = -40 if _is_mobile else -15
 	pause_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	pause_panel.grow_vertical = Control.GROW_DIRECTION_END
-	pause_panel.custom_minimum_size = Vector2(150, 0) if _is_mobile else Vector2(100, 0)
+	pause_panel.custom_minimum_size = Vector2(180, 0) if _is_mobile else Vector2(80, 0)
 	pause_panel.visible = false
 	canvas.add_child(pause_panel)
 
@@ -653,7 +654,7 @@ func _setup_ui() -> void:
 	pause_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	pause_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	pause_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 32)
+	pause_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 28)
 	pause_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(pause_label, false)
 	pause_panel.add_child(pause_label)
@@ -677,7 +678,7 @@ func _setup_ui() -> void:
 	game_over_panel.add_theme_stylebox_override("panel", custom_go_style)
 	
 	game_over_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	game_over_panel.offset_top = 20
+	game_over_panel.offset_top = 30 if _is_mobile else 15
 	game_over_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	game_over_panel.grow_vertical = Control.GROW_DIRECTION_END
 	game_over_panel.visible = false
@@ -712,7 +713,7 @@ func _setup_ui() -> void:
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	rotate_label.add_theme_font_size_override("font_size", 40) # Even smaller for better safety
+	rotate_label.add_theme_font_size_override("font_size", 48 if _is_mobile else 24) # Ensure it's large on mobile
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(rotate_label, true)
 	rotate_panel.add_child(rotate_label)
@@ -725,7 +726,7 @@ func _setup_ui() -> void:
 	go_label.text = "TOANG RỒI BẠN YÊU DẤU ƠI!"
 	go_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	go_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	go_label.add_theme_font_size_override("font_size", 52 if _is_mobile else 28)
+	go_label.add_theme_font_size_override("font_size", 56 if _is_mobile else 26)
 	go_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(go_label, true)
 	game_over_container.add_child(go_label)
@@ -738,7 +739,7 @@ func _setup_ui() -> void:
 	score_disp.name = "ScoreDisplay"
 	score_disp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	score_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
-	score_disp.add_theme_font_size_override("font_size", 36 if _is_mobile else 22)
+	score_disp.add_theme_font_size_override("font_size", 40 if _is_mobile else 20)
 	score_disp.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(score_disp, true)
 	game_over_container.add_child(score_disp)
@@ -747,7 +748,7 @@ func _setup_ui() -> void:
 	best_disp.name = "BestDisplay"
 	best_disp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	best_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
-	best_disp.add_theme_font_size_override("font_size", 36 if _is_mobile else 22)
+	best_disp.add_theme_font_size_override("font_size", 40 if _is_mobile else 20)
 	best_disp.add_theme_color_override("font_color", Color(1, 0.84, 0)) # Gold text for Best
 	_setup_modern_label(best_disp, true)
 	game_over_container.add_child(best_disp)
@@ -761,7 +762,7 @@ func _setup_ui() -> void:
 	restart_lbl.text = "Hãy nhấn chuột hoặc phím Space để chơi lại nha bạn yêu dấu ơi!"
 	restart_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	restart_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
-	restart_lbl.add_theme_font_size_override("font_size", 24 if _is_mobile else 16)
+	restart_lbl.add_theme_font_size_override("font_size", 28 if _is_mobile else 14)
 	restart_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.85))
 	_setup_modern_label(restart_lbl, false)
 	game_over_container.add_child(restart_lbl)
@@ -773,9 +774,9 @@ func _setup_ui() -> void:
 	btn_mute.icon = preload("res://assets/volume-x.svg") if is_muted else preload("res://assets/volume-2.svg")
 	btn_mute.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	btn_mute.expand_icon = true
-	btn_mute.add_theme_constant_override("icon_max_width", 42 if _is_mobile else 28)
-	btn_mute.custom_minimum_size = Vector2(100, 100) if _is_mobile else Vector2(60, 60)
-	btn_mute.position = Vector2(25, 25) if _is_mobile else Vector2(15, 15)
+	btn_mute.add_theme_constant_override("icon_max_width", 48 if _is_mobile else 24)
+	btn_mute.custom_minimum_size = Vector2(110, 110) if _is_mobile else Vector2(50, 50)
+	btn_mute.position = Vector2(25, 25) if _is_mobile else Vector2(10, 10)
 	
 	btn_mute.pressed.connect(_on_mute_pressed)
 	btn_mute.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -787,9 +788,9 @@ func _setup_ui() -> void:
 	btn_pause.icon = preload("res://assets/pause.svg")
 	btn_pause.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	btn_pause.expand_icon = true
-	btn_pause.add_theme_constant_override("icon_max_width", 42 if _is_mobile else 28)
-	btn_pause.custom_minimum_size = Vector2(100, 100) if _is_mobile else Vector2(60, 60)
-	btn_pause.position = Vector2(145, 25) if _is_mobile else Vector2(85, 15)
+	btn_pause.add_theme_constant_override("icon_max_width", 48 if _is_mobile else 24)
+	btn_pause.custom_minimum_size = Vector2(110, 110) if _is_mobile else Vector2(50, 50)
+	btn_pause.position = Vector2(155, 25) if _is_mobile else Vector2(70, 10)
 	
 	btn_pause.pressed.connect(_on_pause_pressed)
 	btn_pause.process_mode = Node.PROCESS_MODE_ALWAYS
