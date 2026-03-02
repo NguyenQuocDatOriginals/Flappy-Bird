@@ -678,10 +678,10 @@ func _setup_ui() -> void:
 	if is_mobile:
 		rotate_panel.custom_minimum_size = Vector2(150, 0)
 		var match_style = rotate_panel.get_theme_stylebox("panel").duplicate()
-		match_style.content_margin_left = 60
-		match_style.content_margin_right = 60
-		match_style.content_margin_top = 40
-		match_style.content_margin_bottom = 40
+		match_style.content_margin_left = 40
+		match_style.content_margin_right = 40
+		match_style.content_margin_top = 30
+		match_style.content_margin_bottom = 30
 		rotate_panel.add_theme_stylebox_override("panel", match_style)
 	
 	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
@@ -697,7 +697,7 @@ func _setup_ui() -> void:
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	rotate_label.add_theme_font_size_override("font_size", 48) # Reduced to fit mobile portrait
+	rotate_label.add_theme_font_size_override("font_size", 40) # Even smaller for better safety
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(rotate_label, true)
 	rotate_panel.add_child(rotate_label)
@@ -831,9 +831,11 @@ func _on_pause_pressed() -> void:
 			score_panel.visible = false
 			message_panel.visible = false
 			pause_panel.visible = true
+			sound.set_bgm_paused(true)
 		else:
 			btn_pause.icon = preload("res://assets/pause.svg")
 			pause_panel.visible = false
+			sound.set_bgm_paused(false)
 			if state == GameState.READY:
 				message_panel.visible = true
 			else:
@@ -966,8 +968,8 @@ func _restart_game() -> void:
 		
 	state = GameState.READY
 
-	for pipe: Node3D in pipe_container.get_children():
-		pipe.queue_free()
+	for pipe: Node in pipe_container.get_children():
+		pipe.free()
 
 	bird.reset()
 	_show_ready_screen()

@@ -13,6 +13,7 @@ var can_flap: bool = false
 var wing_l: MeshInstance3D = null
 var wing_r: MeshInstance3D = null
 var flap_time: float = 0.0
+var _safety_frames: int = 0 # Safety window after restart
 
 
 func _ready() -> void:
@@ -154,6 +155,10 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	if _safety_frames > 0:
+		_safety_frames -= 1
+		return
+
 	if get_slide_collision_count() > 0:
 		die()
 
@@ -185,5 +190,6 @@ func reset() -> void:
 	rotation = Vector3.ZERO
 	is_alive = true
 	can_flap = false
+	_safety_frames = 5 # 5 frames of invulnerability to clear old states
 	collision_layer = 1
 	collision_mask = 6

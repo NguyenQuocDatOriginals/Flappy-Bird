@@ -13,6 +13,7 @@ var _bgm_player: AudioStreamPlayer = null
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_flap_player = _make_player(_gen_flap(), 0.0)
 	_score_player = _make_player(_gen_score(), 0.0)
 	_hit_player = _make_player(_gen_hit(), -2.0)
@@ -42,6 +43,10 @@ func play_bgm() -> void:
 
 func stop_bgm() -> void:
 	_bgm_player.stop()
+
+
+func set_bgm_paused(p: bool) -> void:
+	_bgm_player.stream_paused = p
 
 
 # ------------------------------------------------------------------
