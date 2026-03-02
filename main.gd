@@ -86,8 +86,13 @@ func _check_mobile_orientation() -> void:
 			is_mobile_portrait = true
 			if rotate_panel:
 				rotate_panel.visible = true
-				rotate_panel.mouse_filter = Control.MOUSE_FILTER_STOP # Block touch inputs
+				rotate_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 			
+			# Shift camera to show the flag/map at x=-4
+			var cam = get_viewport().get_camera_3d()
+			if cam:
+				cam.position.x = -4.0
+
 			# Hide all UI and bird
 			_set_game_visibility(false)
 			if message_panel: message_panel.visible = false
@@ -99,12 +104,22 @@ func _check_mobile_orientation() -> void:
 			if rotate_panel:
 				rotate_panel.visible = false
 			
+			# Restore camera position
+			var cam = get_viewport().get_camera_3d()
+			if cam:
+				cam.position.x = 5.0
+			
 			# Restore UI and bird visibility
 			_set_game_visibility(true)
 	else:
 		is_mobile_portrait = false
 		if rotate_panel:
 			rotate_panel.visible = false
+			
+		var cam = get_viewport().get_camera_3d()
+		if cam:
+			cam.position.x = 5.0
+			
 		_set_game_visibility(true)
 
 
@@ -741,12 +756,7 @@ func _setup_ui() -> void:
 
 	# --- Rotate Device Mobile Panel (Hard Block) ---
 	rotate_panel = PanelContainer.new()
-	_setup_modern_panel(rotate_panel, false, true) # No circle, urgent
-	
-	# Solid background to hide game
-	var rotate_style = rotate_panel.get_theme_stylebox("panel").duplicate()
-	rotate_style.bg_color = Color("#111827") # Dark opaque background (Gray 900)
-	rotate_panel.add_theme_stylebox_override("panel", rotate_style)
+	rotate_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	
 	rotate_panel.set_anchors_preset(Control.PRESET_FULL_RECT) # Full Screen
 	rotate_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -757,21 +767,29 @@ func _setup_ui() -> void:
 	rotate_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	canvas.add_child(rotate_panel)
 
-	var rotate_vbox = VBoxContainer.new()
-	rotate_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	rotate_panel.add_child(rotate_vbox)
-
-	# Optional: You could add a rotate icon here later
+	var rotate_center = CenterContainer.new()
+	rotate_panel.add_child(rotate_center)
+	
+	var rotate_pill = PanelContainer.new()
+	_setup_modern_panel(rotate_pill, true, true) # Circle (pill shape) and urgent (red)
+	
+	var pill_style = rotate_pill.get_theme_stylebox("panel").duplicate()
+	pill_style.content_margin_left = 40 if _is_mobile else 20
+	pill_style.content_margin_right = 40 if _is_mobile else 20
+	pill_style.content_margin_top = 20 if _is_mobile else 10
+	pill_style.content_margin_bottom = 20 if _is_mobile else 10
+	rotate_pill.add_theme_stylebox_override("panel", pill_style)
+	rotate_center.add_child(rotate_pill)
 	
 	var rotate_label = Label.new()
-	rotate_label.text = "HÃY XOAY NGANG ĐIỆN THOẠI\nĐỂ TIẾP TỤC CHƠI BẠN NHÉ!"
+	rotate_label.text = "Hãy xoay ngang điện thoại để tiếp tục chơi nha bạn yêu dấu ơi!"
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	rotate_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	rotate_label.add_theme_font_size_override("font_size", 48 if _is_mobile else 24)
+	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	rotate_label.add_theme_font_size_override("font_size", 36 if _is_mobile else 18)
 	rotate_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(rotate_label, true)
-	rotate_vbox.add_child(rotate_label)
+	rotate_pill.add_child(rotate_label)
 
 	game_over_container = VBoxContainer.new()
 	game_over_container.alignment = BoxContainer.ALIGNMENT_CENTER
