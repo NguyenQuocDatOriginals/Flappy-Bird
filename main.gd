@@ -668,6 +668,17 @@ func _setup_ui() -> void:
 	# --- Rotate Device Mobile Panel ---
 	rotate_panel = PanelContainer.new()
 	_setup_modern_panel(rotate_panel, true, true)
+	
+	# Enlarge for mobile
+	var os_name: String = OS.get_name()
+	var is_mobile: bool = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
+	if is_mobile:
+		rotate_panel.custom_minimum_size = Vector2(850, 200)
+		var large_style = rotate_panel.get_theme_stylebox("panel").duplicate()
+		large_style.content_margin_left = 80
+		large_style.content_margin_right = 80
+		rotate_panel.add_theme_stylebox_override("panel", large_style)
+	
 	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
 	rotate_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	rotate_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -726,6 +737,7 @@ func _setup_ui() -> void:
 	game_over_container.add_child(spacer2)
 
 	var restart_lbl: Label = Label.new()
+	restart_lbl.name = "RestartInstruction"
 	restart_lbl.text = "Hãy nhấn chuột hoặc phím Space để chơi lại nha bạn yêu dấu ơi!"
 	restart_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	restart_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -836,7 +848,11 @@ func _on_mute_pressed() -> void:
 # ==============================================================
 
 func _show_ready_screen() -> void:
-	message_label.text = "Hãy nhấn chuột hoặc phím Space để bắt đầu nha bạn yêu dấu ơi!"
+	var os_name: String = OS.get_name()
+	var is_mobile: bool = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
+	var action_text = "chạm vào màn hình" if is_mobile else "nhấn chuột hoặc phím Space"
+	
+	message_label.text = "Hãy " + action_text + " để bắt đầu nha bạn yêu dấu ơi!"
 	message_panel.visible = true
 	pause_panel.visible = false
 	score_panel.visible = false
@@ -927,8 +943,12 @@ func _on_bird_died() -> void:
 	game_over_panel.visible = true
 	game_over_container.get_node("ScoreDisplay").text = "Điểm: " + str(score)
 	game_over_container.get_node("BestDisplay").text = "Kỷ lục: " + str(best_score)
+	
+	var os_name: String = OS.get_name()
+	var is_mobile: bool = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
+	var action_text = "chạm vào màn hình" if is_mobile else "nhấn chuột hoặc phím Space"
+	game_over_container.get_node("RestartInstruction").text = "Hãy " + action_text + " để chơi lại nha bạn yêu dấu ơi!"
 
-	await get_tree().create_timer(0.3).timeout
 	_restart_cooldown = false
 
 
