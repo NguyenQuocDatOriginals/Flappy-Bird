@@ -80,17 +80,59 @@ func _check_mobile_orientation() -> void:
 			is_mobile_portrait = true
 			if rotate_panel:
 				rotate_panel.visible = true
+			
+			# Hiden all UI and bird
+			_set_game_visibility(false)
+			
 			if state != GameState.READY: # Dừng game nếu đang chơi
 				get_tree().paused = true
 		else: # Màn hình ngang (Landscape)
 			is_mobile_portrait = false
 			if rotate_panel:
 				rotate_panel.visible = false
+			
+			# Restore UI and bird visibility
+			_set_game_visibility(true)
 			# Nếu đang sẵn sàng và bị chặn, không tự động unpause game nếu đang chơi (để người dùng nhấn nút Pause lại)
 	else:
 		is_mobile_portrait = false
 		if rotate_panel:
 			rotate_panel.visible = false
+		_set_game_visibility(true)
+
+
+func _set_game_visibility(is_visible: bool) -> void:
+	# UI Elements
+	if btn_mute: btn_mute.visible = is_visible
+	if btn_pause: btn_pause.visible = is_visible
+	
+	if is_visible:
+		# Restore based on state
+		match state:
+			GameState.READY:
+				if message_panel: message_panel.visible = true
+				if score_panel: score_panel.visible = false
+				if game_over_panel: game_over_panel.visible = false
+				if pause_panel: pause_panel.visible = get_tree().paused
+			GameState.PLAYING:
+				if message_panel: message_panel.visible = false
+				if score_panel: score_panel.visible = !get_tree().paused
+				if game_over_panel: game_over_panel.visible = false
+				if pause_panel: pause_panel.visible = get_tree().paused
+			GameState.GAME_OVER:
+				if message_panel: message_panel.visible = false
+				if score_panel: score_panel.visible = false
+				if game_over_panel: game_over_panel.visible = true
+				if pause_panel: pause_panel.visible = false
+	else:
+		if message_panel: message_panel.visible = false
+		if score_panel: score_panel.visible = false
+		if game_over_panel: game_over_panel.visible = false
+		if pause_panel: pause_panel.visible = false
+
+	# Bird visibility
+	if bird:
+		bird.visible = is_visible
 
 
 # ==============================================================
@@ -625,7 +667,7 @@ func _setup_ui() -> void:
 
 	# --- Rotate Device Mobile Panel ---
 	rotate_panel = PanelContainer.new()
-	_setup_modern_panel(rotate_panel, false, true)
+	_setup_modern_panel(rotate_panel, true, true)
 	rotate_panel.set_anchors_preset(Control.PRESET_CENTER)
 	rotate_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	rotate_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -635,7 +677,7 @@ func _setup_ui() -> void:
 	canvas.add_child(rotate_panel)
 
 	var rotate_label = Label.new()
-	rotate_label.text = "Vui lòng xoay ngang\nđiện thoại để chơi!"
+	rotate_label.text = "Hãy xoay ngang điện thoại để chơi nha bạn yêu dấu ơi!"
 	rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rotate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rotate_label.autowrap_mode = TextServer.AUTOWRAP_OFF
