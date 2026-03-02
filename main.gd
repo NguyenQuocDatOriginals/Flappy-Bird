@@ -51,6 +51,10 @@ func _ready() -> void:
 	
 	# Lắng nghe sự thay đổi kích thước màn hình
 	get_tree().root.size_changed.connect(_on_size_changed)
+	
+	# Explicitly set stretch mode for edge-to-edge mobile display
+	get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 
 	_check_mobile_orientation() # Phase 1: Set _is_mobile flag
 	_setup_sound()
@@ -164,6 +168,11 @@ func _setup_environment() -> void:
 	env.sky = sky
 	env.ambient_light_color = Color(0.85, 0.90, 1.0)
 	env.ambient_light_energy = 0.8
+	
+	# Anti-overexposure (Tonemapping)
+	env.tonemap_mode = Environment.TONEMAP_ACES
+	env.tonemap_exposure = 1.0
+	env.tonemap_white = 1.0
 
 	var world_env: WorldEnvironment = WorldEnvironment.new()
 	world_env.environment = env
@@ -177,6 +186,7 @@ func _setup_camera() -> void:
 	cam.position = Vector3(5, 7, 20)
 	cam.fov = 45
 	cam.current = true
+	cam.keep_aspect = Camera3D.KEEP_HEIGHT # Expand horizontally for wide screens
 	add_child(cam)
 
 
@@ -441,6 +451,9 @@ func _create_flag() -> void:
 		var tex: Texture2D = load("res://assets/Quốc kỳ Việt Nam.png")
 		flag_mat.albedo_texture = tex
 		flag_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		flag_mat.specular = 0.0 # Remove overexposed glare
+		flag_mat.roughness = 1.0
+		flag_mat.albedo_color = Color(0.9, 0.9, 0.9) # Subtle headroom
 		flag_mesh.material = flag_mat
 		
 		flag.mesh = flag_mesh
@@ -469,7 +482,7 @@ func _create_posters() -> void:
 
 		# Poster legs (two feet) - Positioned behind (z = -0.1)
 		var leg_mat: StandardMaterial3D = StandardMaterial3D.new()
-		leg_mat.albedo_color = Color(0.3, 0.3, 0.3)
+		leg_mat.albedo_color = Color(0.8, 0.8, 0.8) # Matched with flagpole color
 		
 		var leg_mesh: CylinderMesh = CylinderMesh.new()
 		leg_mesh.top_radius = 0.12 # Matching scale for 6.0 width
@@ -495,6 +508,9 @@ func _create_posters() -> void:
 		var board_mat: StandardMaterial3D = StandardMaterial3D.new()
 		board_mat.albedo_texture = poster_tex
 		board_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		board_mat.specular = 0.0 # Remove overexposed glare
+		board_mat.roughness = 1.0 
+		board_mat.albedo_color = Color(0.9, 0.9, 0.9) # Slight headroom
 		board_mesh.material = board_mat
 		
 		board.mesh = board_mesh
