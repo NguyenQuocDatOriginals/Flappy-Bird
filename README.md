@@ -26,11 +26,4 @@
 * Score tracking with best score persistence to challenge yourself
 * MSAA anti-aliasing for smooth 3D visuals
 
-### How to run
-
-1. Download and install [Godot Engine 4.7](https://godotengine.org/download)
-2. Clone this repository
-3. Open the project in Godot Engine
-4. Press **F5** or click the **Play** button to run the game
-
 #### Copyright © 2026 Nguyễn Quốc Đạt Originals
