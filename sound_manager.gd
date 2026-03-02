@@ -1,8 +1,5 @@
 extends Node
 
-# Procedurally generated sound effects for Flappy Bird 2.5D
-# All sounds are created from raw PCM data — no external audio files needed.
-
 const MIX_RATE: int = 22050
 
 var _flap_player: AudioStreamPlayer = null
@@ -23,14 +20,17 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	# Heartbeat: Ensure BGM is actually playing/paused as intended
+	# Heartbeat: Aggressively maintain the BGM state
 	if _is_bgm_should_play:
+		# If it stopped for any reason (browser context, engine hiccup), restart it
 		if not _bgm_player.playing:
 			_bgm_player.play()
+		# Ensure it's not accidentally paused
 		if _bgm_player.stream_paused:
 			_bgm_player.stream_paused = false
 	else:
-		if _bgm_player.playing and not _bgm_player.stream_paused:
+		# If it should be paused, ensure the pause flag is set
+		if not _bgm_player.stream_paused:
 			_bgm_player.stream_paused = true
 
 
@@ -64,9 +64,13 @@ func set_bgm_paused(p: bool) -> void:
 	_is_bgm_should_play = !p
 	_bgm_player.stream_paused = p
 	
-	# Force an immediate check
-	if not p and not _bgm_player.playing:
-		_bgm_player.play()
+	# Force an immediate state reconciliation
+	if _is_bgm_should_play:
+		if not _bgm_player.playing:
+			_bgm_player.play()
+		_bgm_player.stream_paused = false
+	else:
+		_bgm_player.stream_paused = true
 
 
 # ------------------------------------------------------------------

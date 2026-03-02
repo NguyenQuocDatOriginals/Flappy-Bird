@@ -53,6 +53,7 @@ func _ready() -> void:
 	# Lắng nghe sự thay đổi kích thước màn hình
 	get_tree().root.size_changed.connect(_on_size_changed)
 
+	_check_mobile_orientation() # Check platform BEFORE anything else
 	_setup_sound()
 	_setup_environment()
 	_setup_camera()
@@ -63,7 +64,6 @@ func _ready() -> void:
 	_setup_background()
 	_setup_ui()
 	
-	_check_mobile_orientation()
 	_show_ready_screen()
 
 
@@ -73,7 +73,8 @@ func _on_size_changed() -> void:
 
 func _check_mobile_orientation() -> void:
 	var os_name: String = OS.get_name()
-	_is_mobile = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
+	# Refined detection: Remove touchscreen check to avoid identifying laptops as mobile
+	_is_mobile = os_name == "Android" or os_name == "iOS" or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile")
 	
 	if _is_mobile:
 		var screen_size = get_viewport().get_visible_rect().size
@@ -519,7 +520,7 @@ func _setup_modern_button(btn: Button) -> void:
 	font.font_names = ["Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"]
 	font.font_weight = 600
 	btn.add_theme_font_override("font", font)
-	btn.add_theme_font_size_override("font_size", 32 if _is_mobile else 22)
+	btn.add_theme_font_size_override("font_size", 32 if _is_mobile else 20)
 
 
 func _setup_modern_panel(panel: PanelContainer, is_circle: bool = false, is_urgent: bool = false) -> void:
@@ -591,7 +592,7 @@ func _setup_ui() -> void:
 	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	score_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	score_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 40)
+	score_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 36)
 	score_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(score_label, true)
 	score_panel.add_child(score_label)
@@ -617,7 +618,7 @@ func _setup_ui() -> void:
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	message_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	message_label.add_theme_font_size_override("font_size", 32 if _is_mobile else 22)
+	message_label.add_theme_font_size_override("font_size", 32 if _is_mobile else 20)
 	message_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(message_label, false)
 	message_panel.add_child(message_label)
@@ -652,7 +653,7 @@ func _setup_ui() -> void:
 	pause_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	pause_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	pause_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 36)
+	pause_label.add_theme_font_size_override("font_size", 64 if _is_mobile else 32)
 	pause_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(pause_label, false)
 	pause_panel.add_child(pause_label)
@@ -724,7 +725,7 @@ func _setup_ui() -> void:
 	go_label.text = "TOANG RỒI BẠN YÊU DẤU ƠI!"
 	go_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	go_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	go_label.add_theme_font_size_override("font_size", 52 if _is_mobile else 32)
+	go_label.add_theme_font_size_override("font_size", 52 if _is_mobile else 28)
 	go_label.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(go_label, true)
 	game_over_container.add_child(go_label)
@@ -737,7 +738,7 @@ func _setup_ui() -> void:
 	score_disp.name = "ScoreDisplay"
 	score_disp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	score_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
-	score_disp.add_theme_font_size_override("font_size", 36 if _is_mobile else 24)
+	score_disp.add_theme_font_size_override("font_size", 36 if _is_mobile else 22)
 	score_disp.add_theme_color_override("font_color", Color.WHITE)
 	_setup_modern_label(score_disp, true)
 	game_over_container.add_child(score_disp)
@@ -746,7 +747,7 @@ func _setup_ui() -> void:
 	best_disp.name = "BestDisplay"
 	best_disp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	best_disp.autowrap_mode = TextServer.AUTOWRAP_OFF
-	best_disp.add_theme_font_size_override("font_size", 36 if _is_mobile else 24)
+	best_disp.add_theme_font_size_override("font_size", 36 if _is_mobile else 22)
 	best_disp.add_theme_color_override("font_color", Color(1, 0.84, 0)) # Gold text for Best
 	_setup_modern_label(best_disp, true)
 	game_over_container.add_child(best_disp)
@@ -760,7 +761,7 @@ func _setup_ui() -> void:
 	restart_lbl.text = "Hãy nhấn chuột hoặc phím Space để chơi lại nha bạn yêu dấu ơi!"
 	restart_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	restart_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
-	restart_lbl.add_theme_font_size_override("font_size", 24 if _is_mobile else 18)
+	restart_lbl.add_theme_font_size_override("font_size", 24 if _is_mobile else 16)
 	restart_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.85))
 	_setup_modern_label(restart_lbl, false)
 	game_over_container.add_child(restart_lbl)
